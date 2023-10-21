@@ -1,0 +1,71 @@
+.jam-video-conference {
+  background-color: black;
+  width: 100%;
+  height: 100%;
+
+  .settings-button, .settings {
+    position: absolute;
+    z-index: 5;
+    background-color: rgba(0,0,0,0.3);
+    color: lightgray;
+    backdrop-filter: blur(5px);
+  }
+
+  .settings-button {
+    font-size: 2em;
+    border: none;
+    padding: 0;
+    width: 1em;
+    height: 1em;
+    line-height: 1em;
+    border-radius: 0.5em;
+  }
+
+  .settings {
+    width: 100%;
+    height: 100%;
+
+    padding: 1em;
+    box-sizing: border-box;
+
+    button {
+      border: 2px solid lightgray;
+      background-color: transparent;
+      color: lightgray;
+      border-radius: 0.5em;
+      padding: 0.5em;
+      font-weight: bold;
+      display: block;
+
+      margin-bottom: 1em;
+    }
+  }
+
+  .videos {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: flex;
+    flex-wrap: wrap;
+    .video-container {
+      overflow: hidden;
+      display: inline-block;
+    }
+    .lobby {
+      margin-top: 3em;
+      width: 100%;
+      border: 1px solid red;
+
+      button {
+        border: 2px solid lightgray;
+        background-color: transparent;
+        color: lightgray;
+        border-radius: 0.5em;
+        padding: 0.5em;
+        font-weight: bold;
+        display: block;
+
+      }
+    }
+  }
+}
