@@ -15,8 +15,9 @@ import ConnectMedia from './connections/ConnectMedia.js';
 import ConnectRoom from './connections/ConnectRoom';
 import {useStableArray, useStableObject} from '../lib/state-diff';
 import {ServerRecording} from './serverRecording.js';
+import BroadcastReceiver from './connections/BroadcastReceiver.js';
 
-export default function AppState({hasMediasoup}) {
+export default function AppState({hasMediasoup, hasBroadcast}) {
   const swarm = Swarm();
   const {peerState, myPeerState} = swarm;
   is(myPeerState, {
@@ -24,6 +25,8 @@ export default function AppState({hasMediasoup}) {
     micMuted: false,
     leftStage: false,
     isRecording: false,
+    camOn: false,
+    shareScreen: false,
   });
 
   return function AppState({
@@ -51,7 +54,21 @@ export default function AppState({hasMediasoup}) {
 
     declare(ModeratorState, {swarm, moderators: room.moderators, handRaised});
 
-    let remoteStreams = use(ConnectMedia, {roomState, hasMediasoup, swarm});
+    let remoteStreams = use(ConnectMedia, {
+      roomState,
+      hasMediasoup,
+      hasBroadcast,
+      swarm,
+    });
+
+    let broadcastPlayers = use(BroadcastReceiver, {
+      swarm,
+      roomId,
+      roomState,
+      peerState,
+      inRoom,
+      shouldReceive: userInteracted && hasBroadcast && !iAmSpeaker,
+    });
 
     is(myPeerState, {micMuted, inRoom: !!inRoom});
     declare(Reactions, {swarm});
@@ -76,6 +93,7 @@ export default function AppState({hasMediasoup}) {
         moderators: room.moderators,
         swarm,
         remoteStreams,
+        broadcastPlayers,
         userInteracted,
         micMuted,
         handRaised,
