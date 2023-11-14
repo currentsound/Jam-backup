@@ -1191,6 +1191,11 @@ electron-to-chromium@^1.4.284:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.350.tgz#11aae65e0d8b49626c7f298ac577b7b350b007ae"
   integrity sha512-XnXcWpVnOfHZ4C3NPiL+SubeoGV8zc/pg8GEubRtc1dPA/9jKS2vsOPmtClJHhWxUb2RSGC1OBLCbgNUJMtZPw==
 
+eme-encryption-scheme-polyfill@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/eme-encryption-scheme-polyfill/-/eme-encryption-scheme-polyfill-2.1.1.tgz#91c823ed584e8ec5a9f03a6a676def8f80c57a4c"
+  integrity sha512-njD17wcUrbqCj0ArpLu5zWXtaiupHb/2fIUQGdInf83GlI+Q6mmqaPGLdrke4savKAu15J/z1Tg/ivDgl14g0g==
+
 emoji-regex@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-8.0.0.tgz"
@@ -2190,22 +2195,13 @@ jake@^10.6.1:
     filelist "^1.0.1"
     minimatch "^3.0.4"
 
-jam-core-react@^0.5.0:
+jam-core-react@^0.5.0, jam-core-react@^0.5.6:
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/jam-core-react/-/jam-core-react-0.5.6.tgz#442d8d78351f97fa79acc044a1bc1b9dce291dab"
   integrity sha512-mlWTs+GRrXjopkib6bnO6+yQ/NmY87ZiuHfEwP5BORQNYzp1gA6LXXGOuIDRrQQkPnvQwVNyQTTpI+OykcQKRQ==
   dependencies:
     fast-base64 "^0.1.8"
     jam-core "0.5.6"
-    minimal-state "^5.6.0"
-    use-minimal-state "^3.5.0"
-    watsign "^0.1.8"
-
-jam-core-react@^0.5.7:
-  version "0.6.0"
-  dependencies:
-    fast-base64 "^0.1.8"
-    jam-core "0.6.0"
     minimal-state "^5.6.0"
     use-minimal-state "^3.5.0"
     watsign "^0.1.8"
@@ -3379,6 +3375,13 @@ setprototypeof@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.1.1.tgz"
   integrity sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==
+
+shaka-player@^4.3.6:
+  version "4.3.6"
+  resolved "https://registry.yarnpkg.com/shaka-player/-/shaka-player-4.3.6.tgz#9cc99f7918bb8da4b4eadb9215e781de89220f3a"
+  integrity sha512-IX0rJY9NZyENcFH3MDf50cpOLOBsWWdaX8D3Fy0kSl7j1D1I+sXrzOQ2LxFgwmlqbIX3XrHzY9bxiWapV3ZjEg==
+  dependencies:
+    eme-encryption-scheme-polyfill "^2.1.1"
 
 shebang-command@^1.2.0:
   version "1.2.0"

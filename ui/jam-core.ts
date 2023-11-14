@@ -194,6 +194,7 @@ function createJam(
     ...defaultProps,
     ...initialProps,
     hasMediasoup: !!staticConfig.sfu,
+    hasBroadcast: !!staticConfig.broadcast,
   };
   const {state, dispatch, setProps} = declareStateRoot(AppState, props as any, {
     state: undefined,

@@ -9,6 +9,7 @@ const defaultProps = {
   handRaised: false,
   autoJoin: false,
   hasMediasoup: false,
+  hasBroadcast: false,
   customStream: null,
 };
 type Props = typeof defaultProps;
@@ -42,12 +43,15 @@ type RoomType = {
   color?: string;
   logoURI?: string;
   access?: AccessType;
+  broadcastRoom?: boolean;
 };
 type PeerState = {
   inRoom: boolean;
   micMuted: boolean;
   leftStage: boolean;
   isRecording: boolean;
+  camOn: boolean;
+  shareScreen: boolean;
 };
 
 const defaultState = {

@@ -16,6 +16,8 @@ const {controller} = require('./routes/controller');
 const roomKeyRouter = require('./routes/roomKey');
 const liveRoomRouter = require('./routes/liveRoom');
 const recordingsRouter = require('./routes/recordings');
+const jamConfigRouter = require('./routes/jamConfig');
+const {hlsFileLocationPath} = require('./config');
 const app = express();
 
 app.use(logger('dev'));
@@ -26,6 +28,9 @@ app.use(ssr);
 app.use('/', indexRouter);
 app.use('/metrics', metricsRouter);
 app.use('/activity', activityRouter);
+app.use('/jam-config', jamConfigRouter);
+
+app.use('/stream/hls', express.static(hlsFileLocationPath));
 
 app.use(
   '/api/v1/',
