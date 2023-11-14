@@ -1,6 +1,7 @@
 import shaka from 'shaka-player';
 
 import {useUpdate, use} from '../../lib/state-tree';
+import {staticConfig} from '../config';
 
 export default function BroadcastReceiver({swarm}) {
   let update = useUpdate();
@@ -78,7 +79,7 @@ export default function BroadcastReceiver({swarm}) {
 
   async function createPeerPlayer({roomId, peerId, source}) {
     const mediaElement = document.createElement('video');
-    const broadcastUrl = `http://localhost:3001/stream/hls/${roomId}/${peerId}/${source}/index.m3u8`;
+    const broadcastUrl = `${staticConfig.urls.pantry}/stream/hls/${roomId}/${peerId}/${source}/index.m3u8`;
     const player = new shaka.Player(mediaElement);
     await player.load(broadcastUrl);
     return player;
