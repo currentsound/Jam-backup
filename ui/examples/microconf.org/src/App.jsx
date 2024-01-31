@@ -13,16 +13,21 @@ const domain = 'microconf.org';
 const jamConfig = {
   domain,
   urls: {
+    //pantry: 'https://microconf.org/_/pantry',
+    pantry: 'https://beta.jam.systems/_/pantry',
+    //pantry: 'http://localhost:3001',
+    //pantry: 'https://edge.allpeep.com/_/pantry',
     stun: `stun:stun.jam.systems:3478`,
     turn: `turn:turn.jam.systems:3478`,
     turnCredentials: {username: 'test', credential: 'yieChoi0PeoKo8ni'},
   },
   sfu: true,
+  broadcast: true,
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <div className="microconf">
-    <JamProvider options={{jamConfig}}>
+    <JamProvider options={{jamConfig, debug: true}}>
       <App />
     </JamProvider>
   </div>

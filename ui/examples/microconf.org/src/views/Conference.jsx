@@ -20,7 +20,7 @@ export const Conference = () => {
   const [showRooms, setShowRooms] = useState(false);
   const [showRoomInfo, setShowRoomInfo] = useState(false);
 
-  const theme = conference?.theme || 'default';
+  const theme = conference?.theme || 'scifi';
 
   document.getElementById('theme-variables').href = `/themes/${theme}.css`;
   document.title = `microconf - ${conference?.name}`;
