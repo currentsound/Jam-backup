@@ -26,7 +26,8 @@ export default function RoomHeader({
             alt={'room icon'}
             className="w-16 h-16 border rounded p-1 m-2 mt-0"
             src={logoURI}
-            style={{objectFit: 'cover'}}
+            style={{objectFit: 'cover', display: 'none'}}
+            onLoad={e => (e.target.style.display = '')}
           />
         </div>
       )}

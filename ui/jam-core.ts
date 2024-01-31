@@ -131,7 +131,7 @@ function createApi<T extends StateType>(
 
     startRecording: () => dispatch('start-recording'),
     stopRecording: () => dispatch('stop-recording'),
-    getRecordingsDownloadLink: roomId => recordingsDownloadLink(state, roomId),
+    getRecordingsDownloadLink: (roomId: string) => recordingsDownloadLink(state, roomId),
 
     startServerRecording: () => dispatch(actions.START_SERVER_RECORDING),
     stopServerRecording: () => dispatch(actions.STOP_SERVER_RECORDING),
@@ -194,6 +194,7 @@ function createJam(
     ...defaultProps,
     ...initialProps,
     hasMediasoup: !!staticConfig.sfu,
+    hasBroadcast: !!staticConfig.broadcast,
   };
   const {state, dispatch, setProps} = declareStateRoot(AppState, props as any, {
     state: undefined,
