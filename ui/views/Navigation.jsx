@@ -36,12 +36,16 @@ export default function Navigation({
   setEditSelf,
   noLeave,
 }) {
-  const [state, {leaveRoom, sendReaction, retryMic, setProps}] = useJam();
-  let [myAudio, micMuted, handRaised, iSpeak] = use(state, [
+  const [
+    state,
+    {leaveRoom, sendReaction, retryMic, setProps, switchCamera, setCameraOn},
+  ] = useJam();
+  let [myAudio, micMuted, handRaised, iSpeak, myVideo] = use(state, [
     'myAudio',
     'micMuted',
     'handRaised',
     'iAmSpeaker',
+    'myVideo',
   ]);
 
   let micOn = myAudio?.active;
@@ -90,7 +94,7 @@ export default function Navigation({
       {editSelf && <EditSelf onCancel={() => setEditSelf(false)} />}
       {/* microphone mute/unmute button */}
       {/* TODO: button content breaks between icon and text on small screens. fix by using flexbox & text-overflow */}
-      <div className="flex">
+      <div className="flex space-x-0.5">
         <button
           onClick={iSpeak ? talk : () => setProps('handRaised', !handRaised)}
           onKeyUp={e => {
@@ -136,6 +140,22 @@ export default function Navigation({
             </>
           )}
         </button>
+        {room.videoEnabled && iSpeak && (
+          <>
+            <button
+              className="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
+              onClick={() => setCameraOn(!myVideo)}
+            >
+              Camera {!!myVideo ? 'Off' : 'On'}
+            </button>
+            <button
+              className="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
+              onClick={switchCamera}
+            >
+              Switch Camera
+            </button>
+          </>
+        )}
       </div>
       <br />
       <div className="flex relative">

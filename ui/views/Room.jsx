@@ -31,7 +31,6 @@ export default function Room({room, roomId, uxConfig}) {
     reactions,
     handRaised,
     identities,
-    speaking,
     iSpeak,
     iModerate,
     iMayEnter,
@@ -41,11 +40,12 @@ export default function Room({room, roomId, uxConfig}) {
     peerState,
     myPeerState,
     hasMicFailed,
+    myVideo,
+    remoteVideoStreams,
   ] = use(state, [
     'reactions',
     'handRaised',
     'identities',
-    'speaking',
     'iAmSpeaker',
     'iAmModerator',
     'iAmAuthorized',
@@ -55,6 +55,8 @@ export default function Room({room, roomId, uxConfig}) {
     'peerState',
     'myPeerState',
     'hasMicFailed',
+    'myVideo',
+    'remoteVideoStreams',
   ]);
 
   let myInfo = myIdentity.info;
@@ -202,22 +204,26 @@ export default function Room({room, roomId, uxConfig}) {
                 <StageAvatar
                   key={myPeerId}
                   peerId={myPeerId}
-                  {...{speaking, moderators, reactions, room}}
+                  {...{moderators, reactions, room}}
                   canSpeak={!hasMicFailed}
                   peerState={myPeerState}
                   info={myInfo}
                   onClick={() => setEditSelf(true)}
+                  video={myVideo}
                 />
               )}
               {stagePeers.map(peerId => (
                 <StageAvatar
                   key={peerId}
-                  {...{speaking, moderators, room}}
+                  {...{moderators, room}}
                   {...{peerId, peerState, reactions}}
                   canSpeak={true}
                   peerState={peerState[peerId]}
                   info={identities[peerId]}
                   onClick={iModerate ? () => setEditRole(peerId) : undefined}
+                  video={
+                    remoteVideoStreams.find(s => s.peerId === peerId).stream
+                  }
                 />
               ))}
             </ol>

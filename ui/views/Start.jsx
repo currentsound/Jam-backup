@@ -16,7 +16,7 @@ export default function Start({newRoom = {}, urlRoomId, roomFromURIError}) {
   let [logoURI, setLogoURI] = useState(newRoom.logoURI ?? '');
   let [buttonText, setButtonText] = useState(newRoom.buttonText ?? '');
   let [buttonURI, setButtonURI] = useState(newRoom.buttonURI ?? '');
-  let {stageOnly = false} = newRoom;
+  let {stageOnly = false, videoEnabled = false} = newRoom;
 
   let [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -32,7 +32,14 @@ export default function Start({newRoom = {}, urlRoomId, roomFromURIError}) {
     }
 
     (async () => {
-      let roomPosted = {name, description, logoURI, color, stageOnly};
+      let roomPosted = {
+        name,
+        description,
+        logoURI,
+        color,
+        stageOnly,
+        videoEnabled,
+      };
       let ok = await createRoom(roomId, roomPosted);
       if (ok) {
         if (urlRoomId !== roomId) navigate('/' + roomId);

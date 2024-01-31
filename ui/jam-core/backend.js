@@ -96,6 +96,7 @@ async function createRoom(state, roomId, room = {}) {
     color = undefined,
     stageOnly = false,
     videoCall = false,
+    videoEnabled = false,
   } = room;
   let {myId} = state;
   let newRoom = {
@@ -107,6 +108,7 @@ async function createRoom(state, roomId, room = {}) {
     color,
     stageOnly: !!stageOnly,
     videoCall: !!videoCall,
+    videoEnabled: !!videoEnabled,
     moderators: [myId],
     speakers: [myId],
   };

@@ -38,6 +38,7 @@ type RoomType = {
   speakers: string[];
   moderators: string[];
   presenters: string[];
+  videoEnabled?: boolean;
   stageOnly?: boolean;
   videoCall?: boolean;
   color?: string;
