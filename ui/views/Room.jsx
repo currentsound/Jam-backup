@@ -210,6 +210,7 @@ export default function Room({room, roomId, uxConfig}) {
                   info={myInfo}
                   onClick={() => setEditSelf(true)}
                   video={myVideo}
+                  mirror={true}
                 />
               )}
               {stagePeers.map(peerId => (
@@ -222,7 +223,7 @@ export default function Room({room, roomId, uxConfig}) {
                   info={identities[peerId]}
                   onClick={iModerate ? () => setEditRole(peerId) : undefined}
                   video={
-                    remoteVideoStreams.find(s => s.peerId === peerId).stream
+                    remoteVideoStreams.find(s => s.peerId === peerId)?.stream
                   }
                 />
               ))}

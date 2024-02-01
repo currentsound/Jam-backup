@@ -94,7 +94,7 @@ export default function Navigation({
       {editSelf && <EditSelf onCancel={() => setEditSelf(false)} />}
       {/* microphone mute/unmute button */}
       {/* TODO: button content breaks between icon and text on small screens. fix by using flexbox & text-overflow */}
-      <div className="flex space-x-0.5">
+      <div className="flex flex-wrap space-x-0.5">
         <button
           onClick={iSpeak ? talk : () => setProps('handRaised', !handRaised)}
           onKeyUp={e => {
@@ -115,7 +115,7 @@ export default function Navigation({
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
                     stroke={roomColors.buttonPrimary}
                   />
-                  Your&nbsp;microphone&nbsp;is&nbsp;off
+                  &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;off
                 </>
               )}
               {micOn && !micMuted && (
@@ -124,7 +124,7 @@ export default function Navigation({
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
                     stroke={roomColors.buttonPrimary}
                   />
-                  Your&nbsp;microphone&nbsp;is&nbsp;on
+                  &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;on
                 </>
               )}
               {!micOn && <>Allow&nbsp;microphone&nbsp;access</>}

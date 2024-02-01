@@ -18,6 +18,7 @@ export function StageAvatar({
   info,
   onClick,
   video,
+  mirror,
 }) {
   let mqp = useMqParser();
   let {micMuted, inRoom = null} = peerState || {};
@@ -52,6 +53,7 @@ export function StageAvatar({
                 )}
                 stream={video}
                 onClick={onClick}
+                mirror={mirror}
               />
             ) : (
               <img
@@ -252,7 +254,7 @@ function AnimatedEmoji({emoji, ...props}) {
   );
 }
 
-function Video({stream, className, onClick}) {
+function Video({stream, className, onClick, mirror}) {
   const videoRef = React.createRef();
   useEffect(() => {
     if (videoRef.current) videoRef.current.srcObject = stream;
@@ -263,6 +265,7 @@ function Video({stream, className, onClick}) {
       className={className}
       ref={videoRef}
       onClick={onClick}
+      style={mirror ? {transform: 'scaleX(-1)'} : {}}
       autoPlay
       playsInline
     />
