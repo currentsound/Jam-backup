@@ -34,7 +34,10 @@ export default function Camera() {
   });
 
   async function requestCam() {
-    await navigator.mediaDevices.getUserMedia({video: true});
+    const permissionsStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+    });
+    permissionsStream?.getTracks().forEach(track => track.stop());
 
     try {
       const availableCameraIds = (
