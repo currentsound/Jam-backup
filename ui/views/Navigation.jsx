@@ -36,12 +36,16 @@ export default function Navigation({
   setEditSelf,
   noLeave,
 }) {
-  const [state, {leaveRoom, sendReaction, retryMic, setProps}] = useJam();
-  let [myAudio, micMuted, handRaised, iSpeak] = use(state, [
+  const [
+    state,
+    {leaveRoom, sendReaction, retryMic, setProps, switchCamera, setCameraOn},
+  ] = useJam();
+  let [myAudio, micMuted, handRaised, iSpeak, myVideo] = use(state, [
     'myAudio',
     'micMuted',
     'handRaised',
     'iAmSpeaker',
+    'myVideo',
   ]);
 
   let micOn = myAudio?.active;
@@ -90,7 +94,7 @@ export default function Navigation({
       {editSelf && <EditSelf onCancel={() => setEditSelf(false)} />}
       {/* microphone mute/unmute button */}
       {/* TODO: button content breaks between icon and text on small screens. fix by using flexbox & text-overflow */}
-      <div className="flex">
+      <div className="flex flex-wrap space-x-0.5">
         <button
           onClick={iSpeak ? talk : () => setProps('handRaised', !handRaised)}
           onKeyUp={e => {
@@ -111,7 +115,7 @@ export default function Navigation({
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
                     stroke={roomColors.buttonPrimary}
                   />
-                  Your&nbsp;microphone&nbsp;is&nbsp;off
+                  &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;off
                 </>
               )}
               {micOn && !micMuted && (
@@ -120,7 +124,7 @@ export default function Navigation({
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
                     stroke={roomColors.buttonPrimary}
                   />
-                  Your&nbsp;microphone&nbsp;is&nbsp;on
+                  &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;on
                 </>
               )}
               {!micOn && <>Allow&nbsp;microphone&nbsp;access</>}
@@ -136,6 +140,22 @@ export default function Navigation({
             </>
           )}
         </button>
+        {room.videoEnabled && iSpeak && (
+          <>
+            <button
+              className="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
+              onClick={() => setCameraOn(!myVideo)}
+            >
+              Camera {!!myVideo ? 'Off' : 'On'}
+            </button>
+            <button
+              className="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
+              onClick={switchCamera}
+            >
+              Switch Camera
+            </button>
+          </>
+        )}
       </div>
       <br />
       <div className="flex relative">

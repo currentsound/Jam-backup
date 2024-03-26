@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useJam, use} from '../jam-core-react';
 import {avatarUrl, displayName} from '../lib/avatar';
 import animateEmoji from '../lib/animate-emoji';
 import {useMqParser} from '../lib/tailwind-mqp';
@@ -9,7 +10,6 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
 export function StageAvatar({
   room,
-  speaking,
   canSpeak,
   moderators,
   peerId,
@@ -17,14 +17,16 @@ export function StageAvatar({
   reactions,
   info,
   onClick,
+  video,
+  mirror,
 }) {
   let mqp = useMqParser();
   let {micMuted, inRoom = null} = peerState || {};
   let reactions_ = reactions[peerId];
   info = info || {id: peerId};
-  let isSpeaking = speaking.has(peerId);
   let isModerator = moderators.includes(peerId);
   const roomColors = colors(room);
+
   return (
     inRoom && (
       <li
@@ -36,23 +38,33 @@ export function StageAvatar({
         <div
           className="human-radius p-1"
           style={{
-            backgroundColor: isSpeaking
-              ? roomColors.textSuperLight
-              : roomColors.background,
+            backgroundColor: roomColors.background,
           }}
         >
           <div
             className="human-radius p-1 relative flex justify-center"
             style={{backgroundColor: roomColors.background}}
           >
-            <img
-              className={mqp(
-                'human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'
-              )}
-              alt={displayName(info, room)}
-              src={avatarUrl(info, room)}
-              onClick={onClick}
-            />
+            <SpeakerRing peerId={peerId} roomColors={roomColors} />
+            {video ? (
+              <Video
+                className={mqp(
+                  'human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'
+                )}
+                stream={video}
+                onClick={onClick}
+                mirror={mirror}
+              />
+            ) : (
+              <img
+                className={mqp(
+                  'human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'
+                )}
+                alt={displayName(info, room)}
+                src={avatarUrl(info, room)}
+                onClick={onClick}
+              />
+            )}
             <Reactions
               reactions={reactions_}
               className={mqp(
@@ -239,5 +251,42 @@ function AnimatedEmoji({emoji, ...props}) {
     <div ref={setElement} {...props}>
       {emoji}
     </div>
+  );
+}
+
+function Video({stream, className, onClick, mirror}) {
+  const videoRef = React.createRef();
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.srcObject = stream;
+  }, [stream, videoRef]);
+
+  return (
+    <video
+      className={className}
+      ref={videoRef}
+      onClick={onClick}
+      style={mirror ? {transform: 'scaleX(-1)'} : {}}
+      autoPlay
+      playsInline
+    />
+  );
+}
+
+function SpeakerRing({peerId, roomColors}) {
+  const [state] = useJam();
+  let [speaking] = use(state, ['speaking']);
+  let mqp = useMqParser();
+  return (
+    <div
+      className={mqp(
+        'absolute human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'
+      )}
+      style={{
+        boxShadow: speaking.has(peerId)
+          ? `0 0 0 4px ${roomColors.textSuperLight}`
+          : 'none',
+        zIndex: -10,
+      }}
+    />
   );
 }
