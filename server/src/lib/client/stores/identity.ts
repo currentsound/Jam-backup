@@ -140,8 +140,9 @@ const migrateKeyPairs = () => {
   }
 }
 
-export const initializeIdentities = async () => {
-  await createDefaultIdentityIfNeeded();
-  migrateKeyPairs();
-  return get(identitiesStore);
-}
+export const identityReady = (async () => {
+  if(globalThis.window) {
+    await createDefaultIdentityIfNeeded();
+    migrateKeyPairs();
+  }
+})()

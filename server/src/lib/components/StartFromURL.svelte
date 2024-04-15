@@ -1,7 +1,7 @@
 <script lang="ts">
 import Container from './Container.svelte';
 import {mqp} from "$lib/client/stores/styles";
-import {userInteracted} from "$lib/client/stores/room";
+import {getRoomContext, userInteracted} from "$lib/client/stores/room";
 import type {EventHandler} from "svelte/elements";
 import {createRoom} from "$lib/client/backend";
 import type {JamRoom} from "$lib/types";
@@ -16,12 +16,14 @@ const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
   export let roomId: string;
   export let newRoom: Partial<JamRoom>;
 
-  const { api } = getServerContext();
+  const { api: serverApi } = getServerContext();
+  const { api: roomApi } = getRoomContext();
 
   let submit: EventHandler = async e => {
     e.preventDefault();
     userInteracted.set(true);
-    await $api.createRoom(roomId, newRoom);
+    await $serverApi.createRoom(roomId, newRoom);
+    await $roomApi.enterRoom()
   };
 
 </script>
