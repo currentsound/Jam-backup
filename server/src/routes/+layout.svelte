@@ -1,12 +1,12 @@
 <script lang="ts">
     import type {LayoutData} from "./$types";
     import {onMount} from "svelte";
-    import {migrateKeyPairs} from "$lib/client/stores/identity";
+    import {initializeIdentities} from "$lib/client/stores/identity";
     import {initializeServerContext} from "$lib/client/stores/server";
 
     export let data: LayoutData;
 
-    onMount(() => migrateKeyPairs())
+    onMount(() => initializeIdentities())
 
     initializeServerContext(data.jamConfig);
 </script>

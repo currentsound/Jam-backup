@@ -62,20 +62,22 @@ export const createRoomApi = (room: Room, identities: Identities, jamRoom: JamRo
     };
 }
 
-export const createServerApi = (identity: IdentityWithKeys, dynamicConfig: DynamicConfig, jamConfig: StaticConfig): ServerAPI => {
-    return {
-        createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) =>
-            backend.createRoom(
-                identity,
-                roomId,
-                {
-                    ...jamConfig.defaultRoom,
-                    ...dynamicConfig.room,
-                    ...partialRoom,
-                    id: roomId
-                }),
-        getRoom: (roomId: string) => backend.getRoom(roomId),
-        addAdmin: (participantId: string) => addAdmin(identity, participantId),
-        removeAdmin: (participantId: string) => removeAdmin(identity, participantId),
-    };
+export const createServerApi = (identities: Identities, dynamicConfig: DynamicConfig, jamConfig: StaticConfig): ServerAPI => {
+        const identity = identities._default;
+
+        return {
+            createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) =>
+                backend.createRoom(
+                    identity,
+                    roomId,
+                    {
+                        ...jamConfig.defaultRoom,
+                        ...dynamicConfig.room,
+                        ...partialRoom,
+                        id: roomId
+                    }),
+            getRoom: (roomId: string) => backend.getRoom(roomId),
+            addAdmin: (participantId: string) => addAdmin(identity, participantId),
+            removeAdmin: (participantId: string) => removeAdmin(identity, participantId),
+        };
 }

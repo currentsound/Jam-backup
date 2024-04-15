@@ -3,16 +3,18 @@ import {local} from '../config.js';
 import {readFileSync} from "fs";
 import {existsSync, writeFileSync} from "node:fs";
 
-const localStore: Record<string, unknown> = existsSync('.localData') ? JSON.parse(readFileSync('.localData').toString()) : {};
+const localStoreFilename = '.localData.json'
+
+const localStore: Record<string, unknown> = existsSync(localStoreFilename) ? JSON.parse(readFileSync(localStoreFilename).toString()) : {};
 
 let get = async (key: string) => localStore[key];
 let set = async (key: string, value: unknown) => {
   localStore[key] = value;
-  writeFileSync('.localData', JSON.stringify(localStore));
+  writeFileSync(localStoreFilename, JSON.stringify(localStore, null, 4));
 };
 let del = async (key: string) => {
   delete localStore[key];
-  writeFileSync('.localData', JSON.stringify(localStore));
+  writeFileSync(localStoreFilename, JSON.stringify(localStore, null, 4));
 
 };
 let list = async (prefix: string) => Object.keys(localStore).filter(key => key.startsWith(prefix));

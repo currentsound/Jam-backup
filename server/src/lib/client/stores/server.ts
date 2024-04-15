@@ -1,6 +1,6 @@
-import type {ServerContext, StaticConfig} from "$lib/types";
-import {derived} from "svelte/store";
-import {identitiesStore} from "$lib/client/stores/identity";
+import type {ServerAPI, ServerContext, StaticConfig} from "$lib/types";
+import {derived, type Stores} from "svelte/store";
+import {initializeIdentities} from "$lib/client/stores/identity";
 import {createServerApi} from "$lib/client/api";
 import {getContext, setContext} from "svelte";
 import {dynamicConfig} from "$lib/client/stores/location";
@@ -8,10 +8,12 @@ import {dynamicConfig} from "$lib/client/stores/location";
 
 
 export const initializeServerContext = (jamConfig: StaticConfig) => {
-    const api = derived(
-        [identitiesStore, dynamicConfig],
-        ([$identities, $dynamicConfig]) =>
-            createServerApi($identities._default, $dynamicConfig, jamConfig));
+    const api = derived<Stores, ServerAPI>(
+        dynamicConfig,
+        ($dynamicConfig, set) => {
+            initializeIdentities().then(identities =>
+                set(createServerApi(identities, $dynamicConfig, jamConfig)));
+        });
 
     const ctx: ServerContext = {
         config: jamConfig,
