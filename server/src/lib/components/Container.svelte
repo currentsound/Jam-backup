@@ -1,12 +1,17 @@
 <script lang="ts">
-  import {getJamRoom} from "$lib/client/stores/livekit";
-  export let className: string;
-  export let style: string;
-  const room = getJamRoom();
-  const width = getWidthContext()
+  import {colors} from "$lib/client/utils/theme";
+  import {breakpoints, getWidth} from "$lib/client/stores/styles";
+  import {mergeClasses} from "$lib/client/utils/util";
+  import {getRoomContext} from "$lib/client/stores/room";
+  export let className: string = '';
+  export let style: string = '';
+  const width = getWidth()
+
+  const {state: {jamRoom}} = getRoomContext()
+
   let belowSm = $width < breakpoints.sm;
   let border = belowSm ? '0px' : '2px solid lightgrey';
-  const roomColors = colors($room);
+  const roomColors = colors($jamRoom);
   const backgroundColor = roomColors.background;
   const color = roomColors.text;
 </script>
@@ -22,7 +27,7 @@
     <div
       class={mergeClasses('container b-0', className)}
       style:background-color={backgroundColor}
-      style:width={width < 720 ? '100%' : '700px'}
+      style:width={$width < 720 ? '100%' : '700px'}
       style:border-radius={belowSm ? '0' : '30px 30px 0 0'}
       style:border-top={border}
       style:border-left={border}
@@ -32,4 +37,6 @@
       style:color={color}
       style={style}
       {...$$restProps}
-    />
+    >
+        <slot />
+    </div>

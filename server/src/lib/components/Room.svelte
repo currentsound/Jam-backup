@@ -2,7 +2,7 @@
 import EnterRoom from './EnterRoom.svelte';
 import RoomHeader from './RoomHeader.svelte';
 import {openModal} from '$lib/client/stores/modals';
-import {EditRoomModal} from './EditRoom.svelte';
+import EditRoomModal from './EditRoom.svelte';
 import useWakeLock from '../lib/use-wake-lock';
 import AudienceAvatar from './avatar/AudienceAvatar';
 import StageAvatar from './avatar/StageAvatar';
@@ -10,7 +10,7 @@ import Container from './Container';
 import Navigation from './Navigation';
 import {userAgent} from '../lib/user-agent';
 import {usePushToTalk, useCtrlCombos} from '../lib/hotkeys';
-import {mqp} from "$lib/client/stores/tailwind-mqp";
+import {mqp} from "$lib/client/stores/styles";
 import type {JamRoom} from "$lib/types";
 
 const inWebView =

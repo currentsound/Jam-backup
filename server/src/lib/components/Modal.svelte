@@ -1,7 +1,7 @@
 <script lang="ts">
 
     import Close from './svg/Close'
-    import {mqp} from "$lib/client/stores/tailwind-mqp";
+    import {mqp} from "$lib/client/stores/styles";
 
 </script>
 

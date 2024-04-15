@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Participant} from "livekit-client";
-  import {mqp} from '$lib/client/stores/tailwind-mqp';
+  import {mqp} from '$lib/client/stores/styles';
   import {displayName, avatarUrl} from "$lib/client/utils/avatar";
   import {
     getCameraTrack,
@@ -8,7 +8,7 @@
     getParticipant,
     getParticipantReactions,
     getParticipantTracks
-  } from '$lib/client/stores/livekit';
+  } from '$lib/client/stores/room';
 
   import {colors} from "$lib/client/utils/theme";
   import SpeakerRing from './SpeakerRing';

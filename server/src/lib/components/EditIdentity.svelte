@@ -1,8 +1,8 @@
 <script lang="ts">
 import Modal from './Modal';
-import {mqp} from "$lib/client/stores/tailwind-mqp";
+import {mqp} from "$lib/client/stores/styles";
 import {updateInfo} from '$lib/client/api';
-import {getMyInfo} from "$lib/client/stores/livekit";
+import {getMyInfo} from "$lib/client/stores/room";
 
 function addTwitter(identities, handle, tweet) {
   if (!handle) return;
@@ -14,7 +14,7 @@ function addTwitter(identities, handle, tweet) {
   export let close: () => void;
   let info = getMyInfo();
   let id = $info.id;
-  let name = $info?.displayName;
+  let name = $info?.name;
   let twitterIdentity = $info?.identities?.find(i => i.type === 'twitter');
   let twitter = twitterIdentity?.id;
   let tweetInput = twitterIdentity?.verificationInfo;

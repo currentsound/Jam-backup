@@ -1,31 +1,40 @@
 <script lang="ts">
+    import {getWidth, mqp, setContainerForWidth} from "$lib/client/stores/styles";
+    import Modals from './Modals.svelte';
+    import Start from "$lib/components/Start.svelte";
+    import {toStyleString} from "$lib/client/utils/css";
+    import {dynamicConfig, route} from "$lib/client/stores/location";
+    import {onMount} from "svelte";
+    import {getRoomContext} from "$lib/client/stores/room";
+    import StartFromURL from "$lib/components/StartFromURL.svelte";
 
-import {declareStateRoot} from './lib/state-tree';
-import {ShowAudioPlayerToast} from './AudioPlayerToast.svelte';
-import {createJam} from 'jam-core';
-import {ShowInteractionModal} from './InteractionModal.svelte';
-import {parseUrlConfig} from '$lib/client/utils/url-utils';
-import {colors} from './lib/theme.js';
+    export let style : Partial<CSSStyleDeclaration>;
 
-let urlConfig = parseUrlConfig(location.search, location.hash);
+    let container: HTMLElement;
 
-const [state, api] = createJam({
-  jamConfig: window.jamConfig,
-  initialProps: {roomId: window.existingRoomId ?? null},
-  cachedRooms: window.existingRoomInfo && {
-    [window.existingRoomId]: window.existingRoomInfo,
-  },
-  debug: !!urlConfig.debug,
-});
+    const width = getWidth();
 
-declareStateRoot(ShowModals, null, {state});
+    onMount(() => setContainerForWidth(container));
+
+    const {state: {roomId, jamRoom}} = getRoomContext();
+
 </script>
 
-export default function Jam(props) {
-  return (
-    <JamProvider state={state} api={api}>
-      <JamUI {...props} />
-    </JamProvider>
-  );
-}
+<div
+        bind:this={container}
+        class={mqp('jam sm:pt-12', $width)}
+        style={toStyleString({
+        position: 'relative',
+        height: '100%',
+        minHeight: '-webkit-fill-available',
+        ...style,
+      })}
+>
 
+    {#if !!$jamRoom}
+        <code>{JSON.stringify($jamRoom)}</code>
+    {:else}
+        <StartFromURL {...{roomId, newRoom: $dynamicConfig.room}} />
+    {/if}
+    <Modals/>
+</div>

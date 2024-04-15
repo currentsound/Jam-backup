@@ -1,12 +1,12 @@
 import {derived, writable} from "svelte/store";
 import type {Modal} from "$lib/types";
-import type {SvelteComponent} from "svelte";
+import type {ComponentType} from "svelte";
 
 
 export const modals = writable<Modal[]>([])
 
 
-export function ShowModal({id, component, show = false, onClose}: {id: string, component: SvelteComponent, show: boolean, onClose: () => void}) {
+export function ShowModal({id, component, show = false, onClose}: {id: string, component: ComponentType, show: boolean, onClose: () => void}) {
     const shouldOpen = show && !!component;
     const isOpen = isModalOpen(id);
 
@@ -17,7 +17,7 @@ export function ShowModal({id, component, show = false, onClose}: {id: string, c
     }
 }
 
-export const openModal = (component: SvelteComponent, id: string, onClose: () => void) => {
+export const openModal = (component: ComponentType, id: string, onClose: () => void) => {
     const modal = {id, component};
     modals.update(modals => modals.map(m => m.id).includes(id) ? modals : [modal, ...modals]);
     return () => {

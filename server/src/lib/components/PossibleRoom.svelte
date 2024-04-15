@@ -1,9 +1,7 @@
 <script lang="ts">
 import Room from './Room.svelte';
 import {importRoomIdentity} from '../jam-core';
-import {useJam} from '../jam-core-react';
 import StartFromURL from './StartFromURL.svelte';
-import {use} from 'use-minimal-state';
 
   export let roomId; // truthy
   export let newRoom;
@@ -13,12 +11,6 @@ import {use} from 'use-minimal-state';
   export let autoCreate;
   export let uxConfig;
 
-  let [room, hasRoom, isLoading, _roomId] = use(state, [
-    'room',
-    'hasRoom',
-    'isRoomLoading',
-    'roomId',
-  ]);
   isLoading = isLoading || _roomId === null;
 
   // import room identity
@@ -43,7 +35,7 @@ import {use} from 'use-minimal-state';
   });
 
   if (isLoading) return null;
-  if (hasRoom) return <Room key={roomId} {...{room, roomId, uxConfig}} />;
+
   if (shouldCreate && autoCreateLoading) return null;
 
   if (roomId.length < 4 || (shouldCreate && autoCreateError)) {

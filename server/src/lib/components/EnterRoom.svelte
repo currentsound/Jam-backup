@@ -2,7 +2,7 @@
 import Container from './Container';
 import RoomHeader from './RoomHeader';
 import {colors} from '$lib/client/utils/theme';
-import {mqp} from "$lib/client/stores/tailwind-mqp";
+import {mqp} from "$lib/client/stores/styles";
 
 const iOS =
   /^iP/.test(navigator.platform) ||

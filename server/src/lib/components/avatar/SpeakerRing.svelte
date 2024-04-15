@@ -1,7 +1,7 @@
 <script lang="ts">
 
-    import {mqp} from "$lib/client/stores/tailwind-mqp";
-    import {getIsParticipantSpeaking} from "$lib/client/stores/livekit";
+    import {mqp} from "$lib/client/stores/styles";
+    import {getIsParticipantSpeaking} from "$lib/client/stores/room";
 
     export let participantId: string;
     export let roomColors;

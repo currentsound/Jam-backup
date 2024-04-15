@@ -1,7 +1,7 @@
 <script lang="ts">
 import Modal from './Modal';
 import {rawTimeZones} from '@vvo/tzdb';
-import {mqp} from "$lib/client/stores/tailwind-mqp";
+import {mqp} from "$lib/client/stores/styles";
 
   export let close;
 

@@ -1,5 +1,11 @@
 <script lang="ts">
 import Container from './Container.svelte';
+import {mqp} from "$lib/client/stores/styles";
+import {userInteracted} from "$lib/client/stores/room";
+import type {EventHandler} from "svelte/elements";
+import {createRoom} from "$lib/client/backend";
+import type {JamRoom} from "$lib/types";
+import {getServerContext} from "$lib/client/stores/server";
 
 const iOS =
   /^iP/.test(navigator.platform) ||
@@ -8,15 +14,14 @@ const iOS =
 const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
 
   export let roomId: string;
-  export let newRoom: boolean;
+  export let newRoom: Partial<JamRoom>;
 
-  let submit = e => {
+  const { api } = getServerContext();
+
+  let submit: EventHandler = async e => {
     e.preventDefault();
-    setProps('userInteracted', true);
-    autoJoinOnce(); // => enter room as soon as create room succeeded
-    // (^ causes room to be entered in the same microtask where also room info updates;
-    // if we await createRoom the microtask queue is already emptied)
-    createRoom(roomId, newRoom);
+    userInteracted.set(true);
+    await $api.createRoom(roomId, newRoom);
   };
 
 </script>
@@ -30,7 +35,7 @@ const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
         </p>
 
         <button
-          onClick={submit}
+          on:click={submit}
           class="select-none h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300"
         >
           🌱 Start room

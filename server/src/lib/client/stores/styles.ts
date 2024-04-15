@@ -1,5 +1,4 @@
-import { readable, type Readable} from "svelte/store";
-import {getContext, setContext} from "svelte";
+import { readonly, writable} from "svelte/store";
 
 export const breakpoints = {
   sm: 640,
@@ -29,15 +28,25 @@ export const mqp = (className: string, width: number = 0) => {
     .join(' ');
 }
 
-export const setWidthContext = (container: HTMLElement) => {
-  const ctx = readable<number>(container.offsetWidth, (set) => {
-    const observer = new ResizeObserver(() => {
-      set(container.offsetWidth);
+const writableWidth = writable<number>(700);
+
+let observer: ResizeObserver | undefined = undefined;
+
+export const setContainerForWidth = (container: HTMLElement) => {
+
+    if(observer) {
+      observer.disconnect()
+    }
+
+    observer = new ResizeObserver(() => {
+      writableWidth.set(container.offsetWidth);
     });
     observer.observe(container);
-    return () => observer.disconnect();
-  });
-  setContext('width', ctx);
-  return ctx;
 }
-export const getWidthContext = getContext<Readable<number>>('width')
+export const getWidth = () => readonly(writableWidth);
+
+const backgroundColorStore = writable<string>('white');
+
+export const getBackgroundColor = readonly(backgroundColorStore);
+export const setBackgroundColor = (color: string) => backgroundColorStore.set(color);
+

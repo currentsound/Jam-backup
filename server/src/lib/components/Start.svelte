@@ -1,18 +1,20 @@
 <script lang="ts">
 
-    import {navigate} from '$lib/client/stores/location-store';
+    import {navigate, route} from '$lib/client/stores/location';
     import Container from './Container.svelte';
     import {colors} from '$lib/client/utils/theme';
+    import type {JamRoom} from "$lib/types";
+    import {userInteracted} from "$lib/client/stores/room";
 
-    export let newRoom = {};
-    export let urlRoomId;
-    export let roomFromURIError;
-    // note: setters are currently unused because form is hidden
-    let {stageOnly = false, videoEnabled = false} = newRoom;
+    export let newRoom: Partial<JamRoom> = {stageOnly: false, videoEnabled: false};
+    export let roomFromURIError = false;
+    let urlRoomId = $route;
+
+    let {stageOnly, videoEnabled} = newRoom;
 
     let submit = e => {
         e.preventDefault();
-        setProps('userInteracted', true);
+        userInteracted.set(true);
         const roomId = Math.random().toString(36).substring(2, 6);
 
         (async () => {

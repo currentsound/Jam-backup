@@ -46,10 +46,13 @@
 		"tslib": "^2.4.1",
 		"tweetnacl": "^1.0.3",
 		"typescript": "^5.0.0",
-		"use-minimal-state": "^3.5.0",
+		"uuidv7": "^0.6.3",
 		"vite": "^5.0.3",
 		"ws": "^8.16.0"
 	},
 	"type": "module",
-	"dependencies": {}
+	"dependencies": {
+		"svelte-persisted-store": "^0.9.1",
+		"watsign": "^0.1.8"
+	}
 }

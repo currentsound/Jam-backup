@@ -4,7 +4,6 @@ import {forbidden, notFound} from "$lib/server/errors";
 import {roomAccessor} from "$lib/server/handlers/room";
 import {livekitUrl} from "$lib/server/config";
 import {createAccessToken} from "$lib/server/services/livekit";
-import {identityAccessor} from "$lib/server/handlers/identity";
 
 export const Output = jamAccessSchema;
 export const Param = z.object({

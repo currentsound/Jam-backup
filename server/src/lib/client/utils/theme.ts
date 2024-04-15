@@ -1,8 +1,6 @@
 import color from 'color';
 import type {JamRoom, CompletedJamRoomColors} from "$lib/types";
 
-export {colors};
-
 const defaultColors = {
   background: 'white',
   header: 'black',
@@ -12,12 +10,12 @@ const defaultColors = {
   buttonSecondary: '#e5e7eb',
 };
 
-const colors = (room: JamRoom): CompletedJamRoomColors => {
-  const currentColors = {
+export const colors = (room?: JamRoom): CompletedJamRoomColors => {
+  const currentColors = room ? {
     ...defaultColors,
     ...room.theme?.colors,
     buttonPrimary: room.color || defaultColors.buttonPrimary,
-  };
+  } : defaultColors;
 
   return {
     ...currentColors,

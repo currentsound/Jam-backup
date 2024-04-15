@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import EditRole, {EditSelf} from './EditRole.svelte';
-import {breakpoints, getWidthContext} from '$lib/client/stores/tailwind-mqp';
+import {breakpoints, getWidth} from '$lib/client/stores/styles';
 import {colors} from '$lib/client/utils/theme';
 import {toStyleString} from '$lib/client/utils/css';
 import {openModal} from '$lib/client/stores/modals';
@@ -67,7 +67,7 @@ let navigationStyleSmall = {
 
   let isColorDark = isDark(roomColors.buttonPrimary);
 
-  let width = getWidthContext();
+  let width = getWidth();
 
   let backgroundColor = roomColors.background;
 

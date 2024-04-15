@@ -17,7 +17,7 @@ const roomAvatar = (info: IdentityInfo, room: JamRoom, defaultAvatar: string) =>
   }
 };
 
-const roomDisplayName = (info: IdentityInfo, room: JamRoom) => {
+const roomDisplayName = (info: IdentityInfo, room: JamRoom): string => {
   if (room.userDisplay?.identities) {
     return (
       room.userDisplay.identities[info.id].name ||
@@ -26,7 +26,7 @@ const roomDisplayName = (info: IdentityInfo, room: JamRoom) => {
   } else if (room.userDisplay?.names) {
     return room.userDisplay.names[info.id] || selectFromList(info.id, names);
   } else if (room.userDisplay?.randomIdentities) {
-    return selectFromList(info.id, room.userDisplay?.randomIdentities).name;
+    return selectFromList<IdentityInfo>(info.id, room.userDisplay.randomIdentities).name || selectFromList(info.id, names);
   } else if (room.userDisplay?.randomNames) {
     return selectFromList(info.id, room.userDisplay?.randomNames);
   } else {
@@ -42,9 +42,9 @@ export const avatarUrl = (info: IdentityInfo, room: JamRoom, defaultAvatar = DEF
   }
 };
 
-export const displayName = (info: IdentityInfo, room: JamRoom) => {
-  const infoName = info.name || info.displayName;
-  if (infoName && !room.access?.identitiesLocked) {
+export const displayName = (info: IdentityInfo, room?: JamRoom): string => {
+  const infoName = info.name;
+  if (infoName && !room?.access?.identitiesLocked) {
     return infoName;
   } else if (room) {
     return roomDisplayName(info, room);
