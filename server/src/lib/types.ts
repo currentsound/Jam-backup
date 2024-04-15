@@ -95,7 +95,8 @@ export type JamObject = Record<string, unknown> & {id: string}
 export const jamAccessSchema = z.object({
     token: z.string(),
     livekitUrl: z.string().url(),
-})
+});
+export type JamAccess = z.infer<typeof jamAccessSchema>;
 
 export interface KeyPair {
     publicKey: string,

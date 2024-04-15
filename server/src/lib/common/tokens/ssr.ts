@@ -12,11 +12,14 @@ const keypair = (identity: KeyPair): KeyPairBytes => {
 
 
 const signData = async (identity: KeyPair, data: unknown, messageValiditySeconds: number) => {
-    return Base64.encodeURL(JSON.stringify(wsr.signData({
+
+    const signedData = await wsr.signData({
         record: data,
         keypair: keypair(identity),
         validSeconds: messageValiditySeconds,
-    })));
+    });
+
+    return Base64.encodeURL(JSON.stringify(signedData));
 }
 
 

@@ -2,7 +2,7 @@ import {
     type DynamicConfig,
     type Identities,
     type IdentityInfo,
-    type IdentityWithKeys,
+    type IdentityWithKeys, type JamAccess,
     type JamRoom,
     type RoomAPI, type ServerAPI,
     type StaticConfig
@@ -18,9 +18,8 @@ import {addAdmin, removeAdmin} from "$lib/client/utils/admin";
 
 
 
-export const createRoomApi = (room: Room, identities: Identities, jamRoom: JamRoom | undefined, jamConfig: StaticConfig): RoomAPI => {
+export const createRoomApi = (roomId: string, room: Room, identities: Identities, jamRoom: JamRoom | undefined, jamConfig: StaticConfig): RoomAPI => {
 
-    const roomId = room.name;
     const identity = identities[roomId] ?? identities._default;
 
     type roomUpdater = (room: JamRoom) => JamRoom
@@ -45,7 +44,7 @@ export const createRoomApi = (room: Room, identities: Identities, jamRoom: JamRo
                 info
             )
         },
-        enterRoom: async () => room.connect(jamConfig.livekit.url, await backend.getToken(identity, roomId)),
+        enterRoom: () => backend.getToken(identity, roomId).then((result: JamAccess) => result && room.connect(result.livekitUrl, result.token)),
         leaveRoom: () => room.disconnect(),
         leaveStage: () => backend.deleteRequest(identity, `/rooms/${roomId}/speakers/${identity.publicKey}`),
         sendReaction: (reaction: string) => sendJamMessage(room, {id: uuidv7(), type: 'reaction', reaction}),

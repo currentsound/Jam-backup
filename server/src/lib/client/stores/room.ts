@@ -1,19 +1,16 @@
-import {
-    Participant,
-    ParticipantEvent, RemoteParticipant,
-    Room,
-    RoomEvent,
-    Track
-} from "livekit-client";
+import {Participant, ParticipantEvent, RemoteParticipant, Room, RoomEvent, Track} from "livekit-client";
 import {derived, readable, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
     type IdentityInfo,
     type JamMessage,
     type JamReaction,
-    type JamRoom, type ParticipantContext,
+    type JamRoom,
+    type ParticipantContext,
     participantMetadataSchema,
-    type ParticipantState, type RoomContext, type StaticConfig
+    type ParticipantState,
+    type RoomContext,
+    type StaticConfig
 } from "$lib/types";
 import {createRoomApi} from "$lib/client/api";
 import {toJamRoom} from "$lib/client/utils/livekit";
@@ -158,7 +155,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     const livekitRoomStore = roomListener(livekitRoom);
     const jamRoomStore = roomListener<JamRoom | undefined>(
         livekitRoom,
-        [RoomEvent.RoomMetadataChanged],
+        [RoomEvent.RoomMetadataChanged, RoomEvent.ConnectionStateChanged],
         toJamRoom,
         jamRoom
         );
@@ -166,7 +163,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     const api = derived(
         [livekitRoomStore, identitiesStore, jamRoomStore],
         ([$room, $identities, $jamRoom]) =>
-            createRoomApi($room, $identities, $jamRoom, jamConfig));
+            createRoomApi(roomId, $room, $identities, $jamRoom, jamConfig));
 
 
     const context: RoomContext = {

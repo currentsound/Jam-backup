@@ -17,17 +17,18 @@ const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
   export let newRoom: Partial<JamRoom>;
 
   const { api: serverApi } = getServerContext();
-  const { api: roomApi } = getRoomContext();
+  const { api: roomApi, state: {jamRoom} } = getRoomContext();
 
   let submit: EventHandler = async e => {
     e.preventDefault();
     userInteracted.set(true);
     await $serverApi.createRoom(roomId, newRoom);
-    await $roomApi.enterRoom()
+    await $roomApi.enterRoom();
   };
 
 </script>
     <Container>
+      <code>{JSON.stringify($jamRoom)}</code>
       <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
         <h1>Start a Room</h1>
         <p class="mb-6">
@@ -56,3 +57,4 @@ const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
         </div>
       </div>
     </Container>
+

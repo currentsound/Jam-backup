@@ -121,7 +121,7 @@ async function getRoom(roomId: string) {
 
 async function getToken(identity: IdentityWithKeys, roomId: string) {
   if (!roomId) return undefined;
-  return (await authedGet(identity, `/rooms/${roomId}`))[0];
+  return (await authedGet(identity, `/rooms/${roomId}/token`))[0];
 }
 
 
