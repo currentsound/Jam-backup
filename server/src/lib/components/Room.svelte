@@ -1,43 +1,36 @@
 <script lang="ts">
-import EnterRoom from './EnterRoom.svelte';
-import RoomHeader from './RoomHeader.svelte';
-import {openModal} from '$lib/client/stores/modals';
-import EditRoomModal from './EditRoom.svelte';
-import useWakeLock from '../lib/use-wake-lock';
-import AudienceAvatar from './avatar/AudienceAvatar';
-import StageAvatar from './avatar/StageAvatar';
-import Container from './Container';
-import Navigation from './Navigation';
-import {userAgent} from '../lib/user-agent';
-import {usePushToTalk, useCtrlCombos} from '../lib/hotkeys';
-import {mqp} from "$lib/client/stores/styles";
-import type {JamRoom} from "$lib/types";
+  import RoomHeader from './RoomHeader.svelte';
+  import AudienceAvatar from './avatar/AudienceAvatar.svelte';
+  import StageAvatar from './avatar/StageAvatar.svelte';
+  import Container from './Container.svelte';
+  import Navigation from './Navigation.svelte';
+  import {userAgent} from '$lib/client/utils/user-agent';
+  import {usePushToTalk, useCtrlCombos} from '$lib/client/utils/hotkeys';
+  import {mqp} from "$lib/client/stores/styles";
+  import {useWakeLock} from "$lib/client/utils/use-wake-lock";
+  import {getRoomContext, initializeActionsContext} from "$lib/client/stores/room";
+  import {dynamicConfig} from "$lib/client/stores/location";
 
-const inWebView =
-  userAgent.browser?.name !== 'JamWebView' &&
-  (userAgent.browser?.name === 'Chrome WebView' ||
-    (userAgent.os?.name === 'iOS' &&
-      userAgent.browser?.name !== 'Mobile Safari'));
 
-  export let room: JamRoom;
-  export let roomId: string;
-  export let uxConfig;
+  const inWebView =
+    userAgent.browser?.name !== 'JamWebView' &&
+    (userAgent.browser?.name === 'Chrome WebView' ||
+      (userAgent.os?.name === 'iOS' &&
+        userAgent.browser?.name !== 'Mobile Safari'));
+
+
+  const {state: {roomId, livekitRoom, jamRoom, me, participants, colors}, api} = getRoomContext();
 
   useWakeLock();
   usePushToTalk();
   useCtrlCombos();
 
 
-  let myInfo = myIdentity.info;
-  let hasEnteredRoom = inRoom === roomId;
-
-  let [editRole, setEditRole] = useState(null);
-  let [editSelf, setEditSelf] = useState(false);
+  let myInfo = $me.info;
 
   let {
     name,
     description,
-    schedule,
     logoURI,
     buttonURI,
     buttonText,
@@ -45,54 +38,32 @@ const inWebView =
     moderators,
     closed,
     stageOnly,
-    shareUrl,
-  } = room || {};
+  } = $jamRoom || {};
 
   let myPeerId = myInfo.id;
-  let stagePeers = stageOnly
-    ? peers
-    : (speakers ?? []).filter(id => peers.includes(id));
-  let audiencePeers = stageOnly
-    ? []
-    : peers.filter(id => !stagePeers.includes(id));
 
-  let {noLeave} = uxConfig;
+
+
+  let stageParticipants = stageOnly ? $participants : $participants.filter(p => speakers?.includes(p.id))
+  let audienceParticipants = stageOnly
+     ? []
+     : $participants.filter(p => !stageParticipants.map(p => p.id).includes(p.id));
+
+  let {noLeave} = $dynamicConfig.ux || {};
+
+  const {showActions, showRoleActions} = initializeActionsContext();
+
 
 </script>
-{#if !iMayEnter}
-  <EnterRoom roomId={roomId} name={name} forbidden={true} />
 
-{:else if !iModerate && closed}
-  <EnterRoom
-          roomId={roomId}
-          name={name}
-          description={description}
-          schedule={schedule}
-          logoURI={logoURI}
-          closed={closed}
-          buttonURI={buttonURI}
-          buttonText={buttonText}
-  />
-
-  {:else if !hasEnteredRoom}
-  <EnterRoom
-          roomId={roomId}
-          name={name}
-          description={description}
-          schedule={schedule}
-          logoURI={logoURI}
-  />
-
-  {:else}
-
-    <Container style={{display: 'flex', flexDirection: 'column'}}>
+    <Container style="display: flex; flexDirection: column">
       <div
         class={mqp('flex flex-col pt-2 md:pt-10 md:p-10')}
-        style={{flex: '1', overflowY: 'auto', minHeight: '0'}}
+        style="flex: 1; overflow-y: auto; min-height: 0"
       >
         <div
           class={
-            inWebView && !uxConfig.noWebviewWarning
+            inWebView && !$dynamicConfig.ux?.noWebviewWarning
               ? 'rounded bg-blue-50 border border-blue-150 text-gray-600 ml-2 p-3 mb-3 inline text-center'
               : 'hidden'
           }
@@ -148,89 +119,52 @@ const inWebView =
           Room is closed
         </div>
         <RoomHeader
-          colors={colors(room)}
           {...{name, description, logoURI, buttonURI, buttonText}}
-          editRoom={
-            iModerate && (() => openModal(EditRoomModal, {roomId, room}))
-          }
         />
 
         <div class="">
           <div class="">
             <ol class="flex flex-wrap">
-              {iSpeak && (
+              {#if $me.iSpeak}
                 <StageAvatar
-                  key={myPeerId}
-                  peerId={myPeerId}
-                  {...{moderators, reactions, room}}
-                  canSpeak={!hasMicFailed}
-                  peerState={myPeerState}
-                  info={myInfo}
-                  onClick={() => setEditSelf(true)}
-                  video={myVideo}
-                  mirror={true}
+                  participantContext={$me.context}
+                  canSpeak={!$me.hasMicFailed}
+                  onClick={() => showActions.set(true)}
                 />
-              )}
-              {stagePeers.map(peerId => (
-                <StageAvatar
-                  key={peerId}
-                  {...{moderators, room}}
-                  {...{peerId, peerState, reactions}}
-                  canSpeak={true}
-                  peerState={peerState[peerId]}
-                  info={identities[peerId]}
-                  onClick={iModerate ? () => setEditRole(peerId) : undefined}
-                  video={
-                    remoteVideoStreams.find(s => s.peerId === peerId)?.stream
-                  }
-                />
-              ))}
+              {/if}
+              {#each stageParticipants as participantContext (participantContext.id)}
+                  <StageAvatar
+                    participantContext={$me.context}
+                    onClick={$me.iModerate ? () => showRoleActions.set($me.info.id) : undefined}
+                  />
+              {/each}
             </ol>
           </div>
 
           <br />
-          {#if !$room.stageOnly}
-              <h3 class="pl-4 pb-4" style={{color: colors(room).textLight}}>
+          {#if !$jamRoom?.stageOnly}
+              <h3 class="pl-4 pb-4" style="color: {$colors.textLight}">
                 Audience
               </h3>
               <ol class="flex flex-wrap">
-                {!iSpeak && (
+                {#if !$me.iSpeak }
                   <AudienceAvatar
-                    {...{reactions, room}}
-                    peerId={myPeerId}
-                    peerState={myPeerState}
-                    info={myInfo}
-                    handRaised={handRaised}
-                    onClick={() => setEditSelf(true)}
+                      participantContext={$me.context}
+                      onClick={() => showActions.set(true)}
                   />
-                )}
-                {audiencePeers.map(peerId => (
+                {/if}
+                {#each audienceParticipants as participantContext (participantContext.id)}
                   <AudienceAvatar
-                    key={peerId}
-                    {...{peerId, peerState, reactions, room}}
-                    peerState={peerState[peerId]}
-                    info={identities[peerId]}
-                    handRaised={iModerate && peerState[peerId]?.handRaised}
-                    onClick={iModerate ? () => setEditRole(peerId) : undefined}
+                          participantContext={participantContext}
+                    onClick={$me.iModerate ? () => showRoleActions.set(participantContext.id) : undefined}
                   />
-                ))}
+                {/each}
               </ol>
             {/if}
         </div>
 
-        <div style={{height: '136px', flex: 'none'}} />
+        <div style="height: 136px; flex: none" />
       </div>
 
-      <Navigation
-        {...{
-          roomId,
-          room,
-          editRole,
-          setEditRole,
-          editSelf,
-          setEditSelf,
-          noLeave,
-        }}
-      />
+      <Navigation />
     </Container>
-  {/if}

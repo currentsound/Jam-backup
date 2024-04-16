@@ -1,5 +1,5 @@
 <script lang="ts">
-import {CloseSvg, ShowModal} from './Modal';
+import {CloseSvg, ShowModal} from './modals/Modal.svelte';
 
 export function ShowAudioPlayerToast() {
   let audioFileElement = useRootState('audioFileElement');

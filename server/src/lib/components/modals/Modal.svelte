@@ -1,14 +1,18 @@
 <script lang="ts">
 
-    import Close from './svg/Close'
-    import {mqp} from "$lib/client/stores/styles";
+    import Close from '../svg/Close.svelte'
+    import {getWidth, mediaQuery, mqp} from "$lib/client/stores/styles";
+    import {toStyleString} from "$lib/client/utils/css";
 
+    const width = getWidth();
+
+    export let close: () => void;
 </script>
 
 
     <div
       class={mqp('p-0 sm:p-5 items-stretch sm:items-center')}
-      style={{
+      style={toStyleString({
         position: 'absolute',
         zIndex: '10',
         top: '0',
@@ -17,41 +21,37 @@
         width: '100%',
         backgroundColor: '#00000033',
         display: 'flex',
-      }}
-      onClick={close}
+      })}
+      on:click={close}
     >
       <div
         class={mqp('relative p-1 pt-10 pb-10 sm:rounded-xl')}
-        style={{
+        style={toStyleString({
           flex: 'none',
           display: 'flex',
           flexDirection: 'column',
           margin: '0 auto',
-          width: useMediaQuery('sm', '100%', '640px'),
+          width: mediaQuery($width, 'sm', '100%', '640px'),
           maxWidth: '100%',
           maxHeight: '100%',
           overflowY: 'hidden',
           backgroundColor: 'white',
-        }}
-        onClick={e => {
+        })}
+        on:click={e => {
           e.stopPropagation();
         }}
       >
         <div class="absolute top-2 right-2">
           <div
-            onClick={close}
-            style={{padding: '0.75rem', borderRadius: '50%', cursor: 'pointer'}}
+            on:click={close}
+            style="padding: 0.75rem; border-radius: 50%; cursor: pointer"
           >
-            <Close />
+            <Close color="black"/>
           </div>
         </div>
         <div
           class={mqp('px-5 sm:px-8')}
-          style={{
-            flex: '0 1 auto',
-            overflowY: 'auto',
-            minHeight: '0',
-          }}
+          style="flex: 0 1 auto; overflowY: auto; minHeight: 0"
         >
           <slot />
         </div>

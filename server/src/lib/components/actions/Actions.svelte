@@ -1,39 +1,46 @@
 <script lang="ts">
-import {openModal} from './Modal';
-import EditIdentity from './EditIdentity';
-import {ButtonContainer, SecondaryButton} from './buttons';
-import StreamingModal from './StreamingModal';
+import EditIdentity from '../modals/EditIdentity.svelte';
+import {ButtonContainer, SecondaryButton} from '../buttons';
+import StreamingModal from '../modals/StreamingModal.svelte';
+import {mqp} from "$lib/client/stores/styles";
+import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
+import {openModal} from "$lib/client/stores/modals";
 
-export let close;
+  const { showActions } = getActionsContext();
+  const onCancel = () => showActions.set(false);
 
-  let stageOnly = !!room?.stageOnly;
-  iSpeak = stageOnly || iSpeak;
+  const {state: {livekitRoom, jamRoom, me}, api} = getRoomContext();
+
+  let {iSpeak, iModerate, context: {id}} = $me;
+  let stageOnly = !!$jamRoom?.stageOnly;
+
+  let {addSpeaker, removeSpeaker, leaveStage, startRecording, stopRecording, downloadRecording} = $api;
 
 </script>
     <div class={mqp('md:p-10')}>
       <h3 class="font-medium">Actions</h3>
       <br />
       <ButtonContainer>
-        {!room.access?.lockedIdentities && (
+        {#if $jamRoom?.access?.identitiesLocked }
           <SecondaryButton
-            onClick={() => {
-              openModal(EditIdentity);
+            on:click={() => {
+              openModal(EditIdentity, {});
               onCancel();
             }}
           >
             Edit Profile
           </SecondaryButton>
-        )}
+        {/if}
         {#if !stageOnly && iModerate && !iSpeak }
           <SecondaryButton
-            onClick={() => addSpeaker(roomId, myId).then(onCancel)}
+            onClick={() => addSpeaker(id).then(onCancel)}
           >
             ↑ Move to Stage
           </SecondaryButton>
         {/if}
         {#if !stageOnly && iModerate && iSpeak }
           <SecondaryButton
-            onClick={() => removeSpeaker(roomId, myId).then(onCancel)}
+            onClick={() => removeSpeaker(id).then(onCancel)}
           >
             ↓ Leave Stage
           </SecondaryButton>
@@ -61,32 +68,16 @@ export let close;
         {#if iModerate }
           <SecondaryButton
             onClick={() => {
-              if (isRecording) {
+              if ($livekitRoom.isRecording) {
                 stopRecording();
-                downloadRecording('my-recording');
+                downloadRecording();
               } else {
                 startRecording();
               }
               onCancel();
             }}
           >
-            {isRecording ? 'Stop Room Recording' : 'Start Room Recording'}
-          </SecondaryButton>
-        {/if}
-        {#if iModerate }
-          <SecondaryButton
-            onClick={() => {
-              if (isPodcasting) {
-                stopPodcastRecording();
-              } else {
-                startPodcastRecording();
-              }
-              onCancel();
-            }}
-          >
-            {isPodcasting
-              ? 'Stop Podcast Recording'
-              : 'Start Podcast Recording'}
+            {$livekitRoom.isRecording ? 'Stop Room Recording' : 'Start Room Recording'}
           </SecondaryButton>
         {/if}
         <SecondaryButton light onClick={onCancel}>

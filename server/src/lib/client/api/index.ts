@@ -3,7 +3,7 @@ import {
     type Identities,
     type IdentityInfo,
     type IdentityWithKeys, type JamAccess,
-    type JamRoom,
+    type JamRoom, type ParticipantMetadata, participantMetadataSchema, type ParticipantState,
     type RoomAPI, type ServerAPI,
     type StaticConfig
 } from "$lib/types";
@@ -14,7 +14,8 @@ import * as backend from "$lib/client/backend";
 import {displayName} from "$lib/client/utils/avatar";
 import {uuidv7} from "uuidv7";
 import {switchToNextCamera} from "$lib/client/utils/media";
-import {addAdmin, removeAdmin} from "$lib/client/utils/admin";
+import {addAdmin, isAdmin, removeAdmin} from "$lib/client/utils/admin";
+import {pof} from "$lib/utils";
 
 
 
@@ -24,6 +25,17 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
 
     type roomUpdater = (room: JamRoom) => JamRoom
     const updateRoom = async (updater: roomUpdater = room => room) => !!jamRoom && backend.updateRoom(identity, roomId, updater(jamRoom));
+
+    const setMetadata = (metadata: ParticipantMetadata) => room.localParticipant.setMetadata(JSON.stringify(metadata));
+    const getMetadata = () => pof<ParticipantMetadata, ParticipantMetadata>(
+        participantMetadataSchema,
+        JSON.parse(room.localParticipant.metadata || '{}'),
+        {
+            identity: identity.info,
+            state: {
+                handRaised: false,
+            }
+        })
 
 
     return {
@@ -37,25 +49,30 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         removePresenter: (participantId: string) => updateRoom((room) => ({...room, presenters: room.presenters.filter(id => id != participantId)})),
         updateInfo: (info: IdentityInfo) => {
             identity.info = info;
-            updateIdentity(roomId, identity);
-            return backend.putOrPost(
-                identity,
-                `/identities/${identity.publicKey}`,
-                info
-            )
+            setMetadata({...getMetadata(), identity: info})
+            return updateIdentity(roomId, identity);
         },
-        enterRoom: () => backend.getToken(identity, roomId).then((result: JamAccess) => result && room.connect(result.livekitUrl, result.token)),
+        updateState: (stateUpdate: Partial<ParticipantState>) => {
+            const {identity, state} = getMetadata();
+            setMetadata({identity , state: {...state, ...stateUpdate}});
+        },
+        enterRoom: () => backend
+            .getToken(identity, roomId)
+            .then((result: JamAccess | undefined) => result && room.connect(result.livekitUrl, result.token))
+            .then(() => setMetadata({identity: identity.info, state: {handRaised: false}})),
         leaveRoom: () => room.disconnect(),
         leaveStage: () => backend.deleteRequest(identity, `/rooms/${roomId}/speakers/${identity.publicKey}`),
         sendReaction: (reaction: string) => sendJamMessage(room, {id: uuidv7(), type: 'reaction', reaction}),
         autoJoinOnce: () => {},
         switchCamera: () => switchToNextCamera(room),
         setCameraOn: (cameraOn: boolean) => room.localParticipant.setCameraEnabled(cameraOn),
+        toggleCamera: () => room.localParticipant.setCameraEnabled(room.localParticipant.isCameraEnabled),
         selectMicrophone: (mic: InputDeviceInfo) => room.switchActiveDevice("audioinput", mic.deviceId),
         startScreenShare: () => room.localParticipant.setScreenShareEnabled(true),
         stopScreenShare: () => room.localParticipant.setScreenShareEnabled(false),
-        startServerRecording: () => {},
-        stopServerRecording: () => {},
+        startRecording: () => {},
+        stopRecording: () => {},
+        downloadRecording: () => {},
         startPodcastRecording: () => {},
         stopPodcastRecording: () => {},
     };
@@ -76,6 +93,7 @@ export const createServerApi = (identities: Identities, dynamicConfig: DynamicCo
                         id: roomId
                     }),
             getRoom: (roomId: string) => backend.getRoom(roomId),
+            isAdmin: (participantId: string) => isAdmin(identity, participantId),
             addAdmin: (participantId: string) => addAdmin(identity, participantId),
             removeAdmin: (participantId: string) => removeAdmin(identity, participantId),
         };

@@ -1,9 +1,10 @@
-import type {IdentityWithKeys, JamRoom} from "$lib/types";
+import type {IdentityWithKeys, JamAccess, JamRoom} from "$lib/types";
 import {signedToken} from "$lib/common/tokens";
 
 export {
   apiUrl,
   get,
+    authedGet,
   post,
   put,
   putOrPost,
@@ -47,7 +48,7 @@ async function get(path: string) {
 }
 
 // returns [data, ok, status]
-async function authedGet(identity: IdentityWithKeys, path: string) {
+async function authedGet<T = unknown>(identity: IdentityWithKeys, path: string): Promise<[data: T | undefined, ok: boolean, status: number]> {
   let res = await fetch(API + path, {
     method: 'GET',
     headers: {
@@ -121,7 +122,7 @@ async function getRoom(roomId: string) {
 
 async function getToken(identity: IdentityWithKeys, roomId: string) {
   if (!roomId) return undefined;
-  return (await authedGet(identity, `/rooms/${roomId}/token`))[0];
+  return (await authedGet<JamAccess>(identity, `/rooms/${roomId}/token`))[0];
 }
 
 

@@ -620,6 +620,11 @@
   resolved "https://registry.yarnpkg.com/@types/semver/-/semver-7.5.8.tgz#8268a8c57a3e4abd25c165ecd36237db7948a55e"
   integrity sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==
 
+"@types/ua-parser-js@^0.7.39":
+  version "0.7.39"
+  resolved "https://registry.yarnpkg.com/@types/ua-parser-js/-/ua-parser-js-0.7.39.tgz#832c58e460c9435e4e34bb866e85e9146e12cdbb"
+  integrity sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==
+
 "@types/ws@^8.5.10":
   version "8.5.10"
   resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.10.tgz#4acfb517970853fa6574a3a6886791d04a396787"
@@ -2255,6 +2260,11 @@ typescript@^5.0.0, typescript@^5.0.3:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.4.4.tgz#eb2471e7b0a5f1377523700a21669dce30c2d952"
   integrity sha512-dGE2Vv8cpVvw28v8HCPqyb08EzbBURxDpuhJvTrusShUfGnhHBafDsLdS1EhhxyL6BJQE+2cT3dDPAv+MQ6oLw==
 
+ua-parser-js@^1.0.37:
+  version "1.0.37"
+  resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-1.0.37.tgz#b5dc7b163a5c1f0c510b08446aed4da92c46373f"
+  integrity sha512-bhTyI94tZofjo+Dn8SN6Zv8nBDvyXTymAdM3LDI/0IboIUwTu1rEhW7v2TfiVsoYWgkQ4kOVqnI8APUFbIQIFQ==
+
 undici-types@~5.26.4:
   version "5.26.5"
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-5.26.5.tgz#bcd539893d00b56e964fd2657a4866b221a65617"
@@ -2266,13 +2276,6 @@ uri-js@^4.2.2:
   integrity sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==
   dependencies:
     punycode "^2.1.0"
-
-use-minimal-state@^3.5.0:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/use-minimal-state/-/use-minimal-state-3.5.0.tgz#e9105dfc7e30efee1b15faa0817b45dc5f8385c6"
-  integrity sha512-qqnt6Ixu+3IbCer+6gAkHQQd1lTgPEkl8Q5A4AS8aKu32IhZnjJcNhiY9y+MTPLCu3go/fiRk5dZnUlxALGqgA==
-  dependencies:
-    minimal-state "^5.6.0"
 
 util-deprecate@^1.0.2:
   version "1.0.2"
@@ -2306,9 +2309,9 @@ watever-js-wrapper@^0.3.2:
   integrity sha512-BRJn27AJ5qhKaKTLSsuAHFQ9y0htoDOFCfiW7Wvc00uOzqLkdm7cvGtrr0zSjs8J6i2TGFqR8C33D9R5tvu9yA==
 
 watsign@^0.1.8:
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/watsign/-/watsign-0.1.8.tgz#7d51b2e232e32276ad4738cecbf394c03e0e03d6"
-  integrity sha512-W/lt3V4ibTjEvcKk3pEBygTEtwJ75yYZODM1tiflwqPyfSLu4yITcS1jc1cXNEsI5tsBjiepvmCRE846/mM31A==
+  version "0.1.9"
+  resolved "https://registry.yarnpkg.com/watsign/-/watsign-0.1.9.tgz#af6a053d085bb3583c7bf186bdb36be336ec4093"
+  integrity sha512-wS/M+tOeElBxAKfRFNFd6c0uPdDPXz2+EWvCy4vOVq+9wXNiyJsJRgPd1sU5fcq58k6J9zINrTDvNrm+EA71xQ==
   dependencies:
     watever-js-wrapper "^0.3.2"
 

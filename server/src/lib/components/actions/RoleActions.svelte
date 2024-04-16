@@ -1,23 +1,50 @@
 <script lang="ts">
 
-  let [myId, roomId] = use(state, ['myId', 'roomId']);
-  let mqp = useMqParser();
-  let [myAdminStatus] = useApiQuery(`/admin/${myId}`, {fetchOnMount: true});
-  let [peerAdminStatus] = useApiQuery(`/admin/${peerId}`, {fetchOnMount: true});
+  import {onMount} from "svelte";
 
-  let isSpeaker = stageOnly || speakers.includes(peerId);
-  let isModerator = moderators.includes(peerId);
+  import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
+  import {getServerContext} from "$lib/client/stores/server";
+  import {mqp} from "$lib/client/stores/styles";
+
+  export let participantId: string;
+
+  const {showRoleActions} = getActionsContext();
+  const onCancel = () => showRoleActions.set(undefined) ;
+
+  const {state: {jamRoom, me, roomId}, api: roomApi} = getRoomContext();
+  let {speakers, stageOnly, moderators} = $jamRoom || {};
+  let {removeSpeaker, addSpeaker, removeModerator, addModerator} = $roomApi;
+
+  const {api: serverApi} = getServerContext();
+  let {isAdmin, addAdmin, removeAdmin} = $serverApi;
+
+
+  const myId = $me.info.id;
+
+  let iAmAdmin: boolean | undefined = undefined;
+  let participantIsAdmin: boolean | undefined = undefined;
+
+  let isSpeaker = stageOnly || speakers?.includes(participantId);
+  let isModerator = moderators?.includes(participantId);
+
+  let adminStatusFetched = false;
+
+  onMount(async () => {
+    isAdmin(myId).then(r => iAmAdmin = r);
+    isAdmin(participantId).then(r => participantIsAdmin = r);
+    adminStatusFetched = true;
+  });
 
 
 </script>
     <div class={mqp('md:p-10')}>
-      {#if myAdminStatus?.admin}
+      {#if iAmAdmin && adminStatusFetched}
         <div>
           <h3 class="font-medium">Admin Actions</h3>
           <br />
-          {#if peerAdminStatus?.admin }
+          {#if participantIsAdmin }
             <button
-              onClick={() => removeAdmin(peerId).then(onCancel)}
+              on:click={() => removeAdmin(participantId).then(onCancel)}
               class={
                 'mb-2 h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300 mr-2'
               }
@@ -26,7 +53,7 @@
             </button>
           {:else}
             <button
-              onClick={() => addAdmin(peerId).then(onCancel)}
+              on:click={() => addAdmin(participantId).then(onCancel)}
               class={
                 'mb-2 h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300 mr-2'
               }
@@ -45,14 +72,14 @@
       {#if !stageOnly}
           {#if isSpeaker }
           <button
-            onClick={() => removeSpeaker(roomId, peerId).then(onCancel)}
+            on:click={() => removeSpeaker(participantId).then(onCancel)}
             class="mb-2 h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300 mr-2"
           >
             ↓ Move to Audience
           </button>
               {:else}
           <button
-            onClick={() => addSpeaker(roomId, peerId).then(onCancel)}
+            on:click={() => addSpeaker(participantId).then(onCancel)}
             class="mb-2 h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300 mr-2"
           >
             ↑ Invite to Stage
@@ -61,7 +88,7 @@
       {/if}
       {#if isSpeaker && !isModerator}
         <button
-          onClick={() => addModerator(roomId, peerId).then(onCancel)}
+          on:click={() => addModerator(participantId).then(onCancel)}
           class="mb-2 h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300 mr-2"
         >
           ✳️ Make Moderator
@@ -69,14 +96,14 @@
       {/if}
       {#if isModerator}
         <button
-          onClick={() => removeModerator(roomId, peerId).then(onCancel)}
+          on:click={() => removeModerator(participantId).then(onCancel)}
           class="mb-2 h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300 mr-2"
         >
           ❎ Demote Moderator
         </button>
       {/if}
       <button
-        onClick={onCancel}
+        on:click={onCancel}
         class="mb-2 h-12 px-6 text-lg text-black bg-gray-100 rounded-lg focus:shadow-outline active:bg-gray-300"
       >
         Cancel

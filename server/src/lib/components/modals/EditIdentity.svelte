@@ -1,52 +1,61 @@
 <script lang="ts">
-import Modal from './Modal';
+import Modal from './Modal.svelte';
 import {mqp} from "$lib/client/stores/styles";
-import {updateInfo} from '$lib/client/api';
-import {getMyInfo} from "$lib/client/stores/room";
+import type {VerifiableIdentity} from "$lib/types";
+import {getRoomContext} from "$lib/client/stores/room";
 
-function addTwitter(identities, handle, tweet) {
+function addTwitter(identities: VerifiableIdentity[], handle: string | undefined, tweet: string | undefined) {
   if (!handle) return;
-  if (handle.includes('/')) handle = handle.split('/').pop();
+  if (handle.includes('/')) {
+    handle = handle.split('/').pop() || '';
+  }
   handle = handle.replace(/[^0-9a-z-A-Z_]/g, '');
-  identities.push({type: 'twitter', id: handle, verificationInfo: tweet});
+  identities.push({type: 'twitter', id: handle, verificationInfo: tweet || ''});
 }
 
   export let close: () => void;
-  let info = getMyInfo();
-  let id = $info.id;
-  let name = $info?.name;
-  let twitterIdentity = $info?.identities?.find(i => i.type === 'twitter');
+
+  const {state: {me}, api} = getRoomContext();
+
+  let updateInfo = $api.updateInfo;
+
+  let info = $me.info;
+  let id = info.id;
+  let name = info?.name;
+  let twitterIdentity = info?.identities?.find(i => i.type === 'twitter');
   let twitter = twitterIdentity?.id;
   let tweetInput = twitterIdentity?.verificationInfo;
 
   let tweet = twitterIdentity?.verificationInfo;
 
   let showTwitterVerify = false;
+  let files: FileList;
 
-  let submit = async e => {
+  let submit = async (e: Event) => {
     e.preventDefault();
 
-    let identities = [];
+    let identities = info.identities || [];
     addTwitter(identities, twitter, tweetInput);
 
-    let selectedFile = document.querySelector('.edit-profile-file-input')
-      .files[0];
+    const selectedFile = files?.[0];
+
+
 
     if (selectedFile) {
       let reader = new FileReader();
       reader.readAsDataURL(selectedFile);
       reader.onloadend = async () => {
         e.preventDefault();
-        let avatar = reader.result;
-        let ok = await updateInfo({name, avatar, identities});
+        let avatar = reader.result as string;
+        let ok = await updateInfo({id, name, avatar, identities});
         if (ok) close();
       };
     } else {
-      let ok = await updateInfo({name, identities});
+      let ok = await updateInfo({id, name, identities});
       if (ok) close();
     }
   };
-  let cancel = e => {
+  let cancel = (e: Event) => {
     e.preventDefault();
     close();
   };
@@ -54,12 +63,11 @@ function addTwitter(identities, handle, tweet) {
    <Modal close={close}>
       <h1>Edit Profile</h1>
       <br />
-      <form onSubmit={submit}>
+      <form on:submit={submit}>
         <input
           class="rounded placeholder-gray-400 bg-gray-50 w-48"
           type="text"
           placeholder="Display name"
-          value={name ?? ''}
           name="display-name"
           bind:value={name}
         />
@@ -71,6 +79,7 @@ function addTwitter(identities, handle, tweet) {
         <input
           type="file"
           accept="image/*"
+          bind:files
           class="edit-profile-file-input rounded placeholder-gray-400 bg-gray-50 w-72"
         />
         <div class="p-2 text-gray-500 italic">
@@ -82,7 +91,6 @@ function addTwitter(identities, handle, tweet) {
           class="rounded placeholder-gray-400 bg-gray-50 w-48"
           type="text"
           placeholder="@twitter"
-          value={twitter ?? ''}
           name="twitter"
           bind:value={twitter}
         />
@@ -108,14 +116,14 @@ function addTwitter(identities, handle, tweet) {
           <span>
             <span
               class={tweet ? 'hidden' : 'underline'}
-              style={{cursor: 'pointer'}}
-              onClick={() => showTwitterVerify = !showTwitterVerify}
+              style="cursor: pointer"
+              on:click={() => showTwitterVerify = !showTwitterVerify}
             >
               verify
             </span>
             <span
               class={tweet ? '' : 'hidden'}
-              onClick={() => showTwitterVerify = !showTwitterVerify}
+              on:click={() => showTwitterVerify = !showTwitterVerify}
             >
               verified
             </span>
@@ -149,7 +157,7 @@ function addTwitter(identities, handle, tweet) {
             to verify your twitter account
           </p>
           <pre
-            style={{fontSize: '0.7rem'}}
+            style="font-size: 0.7rem"
             class={mqp(
               'rounded-md bg-yellow-50 not-italic text-xs text-center py-2 -ml-2 mt-2 md:text-base'
             )}
@@ -162,7 +170,6 @@ function addTwitter(identities, handle, tweet) {
             type="text"
             placeholder="Tweet URL"
             name="tweet"
-            value={tweetInput ?? ''}
             bind:value={tweetInput}
           />
         </div>
@@ -172,13 +179,13 @@ function addTwitter(identities, handle, tweet) {
         <br />
         <div class="flex">
           <button
-            onClick={submit}
+            on:click={submit}
             class="flex-grow mt-5 h-12 px-6 text-lg text-white bg-gray-600 rounded-lg focus:shadow-outline active:bg-gray-600 mr-2"
           >
             Done
           </button>
           <button
-            onClick={cancel}
+            on:click={cancel}
             class="flex-none mt-5 h-12 px-6 text-lg text-black bg-gray-100 rounded-lg focus:shadow-outline active:bg-gray-300"
           >
             Cancel

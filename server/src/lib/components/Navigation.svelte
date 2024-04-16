@@ -1,13 +1,17 @@
 <script lang="ts">
 
-import EditRole, {EditSelf} from './EditRole.svelte';
+import Actions from './actions/Actions.svelte';
 import {breakpoints, getWidth} from '$lib/client/stores/styles';
-import {colors} from '$lib/client/utils/theme';
 import {toStyleString} from '$lib/client/utils/css';
 import {openModal} from '$lib/client/stores/modals';
 import InfoModal from './InfoModal.svelte';
-import MicOffSvg from './svg/MicOffSvg';
-import MicOnSvg from './svg/MicOnSvg';
+import MicOffSvg from './svg/MicOffSvg.svelte';
+import MicOnSvg from './svg/MicOnSvg.svelte';
+import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
+import {isDark} from "$lib/client/utils/util";
+import {LocalParticipant} from "livekit-client";
+import RoleActions from "$lib/components/actions/RoleActions.svelte";
+import {dynamicConfig} from "$lib/client/stores/location";
 
 const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
@@ -49,21 +53,27 @@ let navigationStyleSmall = {
 //     'myVideo',
 //   ]);
 
-  export let editRole;
-  export let editSelf;
+    const {state: {me, jamRoom, roomId, colors}, api} = getRoomContext();
+  const myInfo = $me.info;
+  const myState = $me.context.state
 
-  const myInfo = getMyInfo();
-  const myState = getMyState();
+const {handRaised} = $myState;
 
-  let micOn = myAudio?.active;
+
+    const {ux} = $dynamicConfig || {};
+
+    const {showActions, showRoleActions} = getActionsContext();
+
+
+const { context: {participant}, iSpeak } = $me;
+    let micOn = $participant.isMicrophoneEnabled;
+    const micMuted = !micOn;
 
   let showReactions = false;
 
-  const room = getRoom();
+  let {speakers, moderators, stageOnly} = $jamRoom || {};
 
-  let {speakers, moderators, stageOnly} = $room;
-
-  const roomColors = colors($room);
+  const roomColors = $colors;
 
   let isColorDark = isDark(roomColors.buttonPrimary);
 
@@ -72,10 +82,8 @@ let navigationStyleSmall = {
   let backgroundColor = roomColors.background;
 
   let talk = () => {
-    if (micOn) {
-      setProps('micMuted', !micMuted);
-    } else {
-      retryMic();
+    if (!micOn) {
+        ($participant as LocalParticipant).setMicrophoneEnabled(true);
     }
   }
 
@@ -89,19 +97,15 @@ let navigationStyleSmall = {
         backgroundColor,
       })}
     >
-      {#if editRole}
-        <EditRole
-          peerId={editRole}
-          speakers={speakers}
-          moderators={moderators}
-          stageOnly={stageOnly}
-          onCancel={() => setEditRole(null)}
+      {#if $showRoleActions}
+        <RoleActions
+          participantId={$showRoleActions}
         />
       {/if}
-      {#if editSelf} <EditSelf onCancel={() => closeEditSelf()} />{/if}
+      {#if $showActions} <Actions />{/if}
       <div class="flex flex-wrap space-x-0.5">
         <button
-          on:click={iSpeak ? talk : () => setProps('handRaised', !handRaised)}
+          on:click={iSpeak ? talk : () => $api.updateState({handRaised: !handRaised})}
           on:keyup={e => (e.key === ' ') && e.preventDefault()}
           class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
           style={toStyleString({
@@ -136,16 +140,16 @@ let navigationStyleSmall = {
               {/if}
           {/if}
         </button>
-        {#if room.videoEnabled && iSpeak}
+        {#if $jamRoom?.videoEnabled && iSpeak}
             <button
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
-              onClick={() => setCameraOn(!myVideo)}
+              on:click={() => $api.toggleCamera()}
             >
-              Camera {!!myVideo ? 'Off' : 'On'}
+              Camera {$participant.isCameraEnabled ? 'Off' : 'On'}
             </button>
             <button
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
-              onClick={switchCamera}
+              on:click={$api.switchCamera}
             >
               Switch Camera
             </button>
@@ -154,9 +158,9 @@ let navigationStyleSmall = {
       <br />
       <div class="flex relative">
         <button
-          onClick={() => setShowReactions(s => !s)}
+          on:click={() => showReactions = !showReactions}
           class="flex-grow select-none text-center h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
-          style={{backgroundColor: roomColors.buttonSecondary}}
+          style="background-color: {roomColors.buttonSecondary}"
         >
           <svg
             class="w-6 h-6 inline-block"
@@ -178,8 +182,8 @@ let navigationStyleSmall = {
             {#each reactionEmojis as r}
               <button
                 class="m-2 p-2 human-radius select-none px-3"
-                onClick={() => {
-                  sendReaction(r);
+                on:click={() => {
+                  $api.sendReaction(r);
                 }}
                 style="background-color: {roomColors.buttonSecondary}"
               >
@@ -190,11 +194,11 @@ let navigationStyleSmall = {
         {/if}
 
         <button
-          onClick={() => {
-            openModal(InfoModal, {roomId, room});
+          on:click={() => {
+            openModal(InfoModal);
           }}
           class="hidden ml-3 select-none h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
-          style={{backgroundColor: roomColors.buttonSecondary}}
+          style="background-color: {roomColors.buttonSecondary}"
         >
           <svg
             class="w-6 h-6"
@@ -212,10 +216,10 @@ let navigationStyleSmall = {
           </svg>
         </button>
 
-        {#if !noLeave }
+        {#if !ux?.noLeave }
           <button
             class="flex-shrink ml-3 select-none h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
-            onClick={() => leaveRoom()}
+            on:click={$api.leaveRoom}
             style="backgroundColor: {roomColors.buttonSecondary}"
           >
             🖖🏽&nbsp;Leave

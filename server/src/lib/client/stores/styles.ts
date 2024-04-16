@@ -28,6 +28,9 @@ export const mqp = (className: string, width: number = 0) => {
     .join(' ');
 }
 
+export const mediaQuery = (width: number, breakpoint: Breakpoint, below: string, above: string) =>
+    (width <= breakpoints[breakpoint]) ? below : above;
+
 const writableWidth = writable<number>(700);
 
 let observer: ResizeObserver | undefined = undefined;
@@ -44,9 +47,4 @@ export const setContainerForWidth = (container: HTMLElement) => {
     observer.observe(container);
 }
 export const getWidth = () => readonly(writableWidth);
-
-const backgroundColorStore = writable<string>('white');
-
-export const getBackgroundColor = readonly(backgroundColorStore);
-export const setBackgroundColor = (color: string) => backgroundColorStore.set(color);
 

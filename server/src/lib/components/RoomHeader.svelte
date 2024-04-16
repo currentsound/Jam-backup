@@ -5,11 +5,12 @@
   import Link from './markdown/Link.svelte';
   import {getRoomContext} from "$lib/client/stores/room";
   import {colors} from '$lib/client/utils/theme';
+  import {openModal} from "$lib/client/stores/modals";
+  import EditRoom from "$lib/components/modals/EditRoom.svelte";
 
-  const {state: {jamRoom}} = getRoomContext();
+  const {state: {jamRoom, me}} = getRoomContext();
 
   let roomColors = colors($jamRoom);
-  export let editRoom: (() => void) | undefined = undefined;
 
   let isRecording = false;
 
@@ -58,12 +59,12 @@
             <MicOnSvg className="h-5" stroke="#ffffff" />
           </div>
         {/if}
-        {#if !!editRoom}
+        {#if $me.iModerate}
           <div
             role="button"
             aria-label="Room settings"
             class="w-8 h-6 cursor-pointer"
-            on:click={editRoom}
+            on:click={() => openModal(EditRoom)}
             style="color: {roomColors.text}"
           >
             <EditSvg />

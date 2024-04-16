@@ -1,9 +1,9 @@
 <script lang="ts">
-import Modal from './Modal';
+import Modal from './Modal.svelte';
 import {rawTimeZones} from '@vvo/tzdb';
 import {mqp} from "$lib/client/stores/styles";
 
-  export let close;
+  export let close: () => void;
 
   let submitUpdate = async partialRoom => {
     updateRoom(roomId, {...room, ...partialRoom});

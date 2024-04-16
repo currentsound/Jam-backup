@@ -3,14 +3,14 @@ import {Base64} from "js-base64";
 
 const DEFAULT_AVATAR = `/img/avatar-default.png`;
 
-const roomAvatar = (info: IdentityInfo, room: JamRoom, defaultAvatar: string) => {
-  if (room.userDisplay?.identities) {
+const roomAvatar = (info: IdentityInfo, room: JamRoom | undefined, defaultAvatar: string) => {
+  if (room?.userDisplay?.identities) {
     return room.userDisplay.identities[info.id].avatar || defaultAvatar;
-  } else if (room.userDisplay?.avatars) {
+  } else if (room?.userDisplay?.avatars) {
     return room.userDisplay.avatars[info.id] || defaultAvatar;
-  } else if (room.userDisplay?.randomIdentities) {
+  } else if (room?.userDisplay?.randomIdentities) {
     return selectFromList(info.id, room.userDisplay?.randomIdentities).avatar;
-  } else if (room.userDisplay?.randomAvatars) {
+  } else if (room?.userDisplay?.randomAvatars) {
     return selectFromList(info.id, room.userDisplay.randomAvatars);
   } else {
     return defaultAvatar;
@@ -34,8 +34,8 @@ const roomDisplayName = (info: IdentityInfo, room: JamRoom): string => {
   }
 };
 
-export const avatarUrl = (info: IdentityInfo, room: JamRoom, defaultAvatar = DEFAULT_AVATAR) => {
-  if (info.avatar && !room.access?.identitiesLocked) {
+export const avatarUrl = (info: IdentityInfo, room?: JamRoom, defaultAvatar = DEFAULT_AVATAR) => {
+  if (info.avatar && !room?.access?.identitiesLocked) {
     return info.avatar;
   } else {
     return roomAvatar(info, room, defaultAvatar);

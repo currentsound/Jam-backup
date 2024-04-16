@@ -1,7 +1,16 @@
-import {Participant, ParticipantEvent, RemoteParticipant, Room, RoomEvent, Track} from "livekit-client";
+import {
+    type LocalParticipant,
+    Participant,
+    ParticipantEvent,
+    RemoteParticipant,
+    Room,
+    RoomEvent,
+    Track
+} from "livekit-client";
 import {derived, readable, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
+    type ActionsContext,
     type IdentityInfo,
     type JamMessage,
     type JamReaction,
@@ -15,6 +24,7 @@ import {
 import {createRoomApi} from "$lib/client/api";
 import {toJamRoom} from "$lib/client/utils/livekit";
 import {identitiesStore} from "$lib/client/stores/identity";
+import {colors} from "$lib/client/utils/theme";
 
 const defaultListenedRoomEvents: RoomEvent[] = [
     RoomEvent.Disconnected,
@@ -136,7 +146,8 @@ export const getParticipantState = (participant: Participant) => participantList
 export const userInteracted = writable<boolean>(false);
 
 const participantContext = (participant: Participant): ParticipantContext => ({
-    livekitParticipant: participantListener(participant),
+    id: participant.identity,
+    participant: participantListener(participant),
     info: getParticipantInfo(participant),
     state: getParticipantState(participant),
     tracks: getParticipantTracks(participant),
@@ -166,11 +177,27 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
             createRoomApi(roomId, $room, $identities, $jamRoom, jamConfig));
 
 
+    const me = derived(
+        [livekitRoomStore, identitiesStore, jamRoomStore],
+        ([$room, $identities, $jamRoom]) => {
+            const identity = $identities[roomId] ?? $identities._default;
+            return {
+                iModerate: !!$jamRoom?.moderators.includes(identity.publicKey),
+                iSpeak: $jamRoom?.stageOnly || !!$jamRoom?.speakers.includes(identity.publicKey),
+                info: identity.info,
+                context: participantContext($room.localParticipant),
+                hasMicFailed: !!$room.localParticipant.lastMicrophoneError
+            }
+        }
+        )
+
     const context: RoomContext = {
         state: {
             roomId,
             livekitRoom: livekitRoomStore,
             jamRoom: jamRoomStore,
+            colors: derived(jamRoomStore, ($jamRoom) => colors($jamRoom)),
+            me,
             participants: roomListener<ParticipantContext[]>(
                 livekitRoom,
                 [
@@ -179,7 +206,6 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
                 ],
                 (room) =>
                     [
-                        room.localParticipant,
                         ...(Object.values(room.remoteParticipants) as RemoteParticipant[])
                     ].map(participantContext)),
         },
@@ -191,3 +217,10 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
 }
 
 export const getRoomContext = () => getContext<RoomContext>('room-context');
+
+export const initializeActionsContext = () => setContext('actions', {
+    showActions: writable<boolean>(false),
+    showRoleActions: writable<string | undefined>(undefined)
+});
+
+export const getActionsContext = () => getContext<ActionsContext>('actions');

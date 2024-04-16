@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Modal from './Modal';
+    import Modal from './modals/Modal.svelte';
     export let close: () => void;
 </script>
     <Modal close={close}>

@@ -1,7 +1,7 @@
 import { z } from 'sveltekit-api';
 import type {Room} from "livekit-server-sdk";
-import type {ComponentType} from "svelte";
-import type {Readable} from "svelte/store";
+import type {ComponentProps, ComponentType, SvelteComponent} from "svelte";
+import type {Readable, Writable} from "svelte/store";
 import {LocalTrackPublication, type Participant, Room as ClientRoom, type Track} from "livekit-client";
 
 export const accessSchema = z.object({
@@ -52,6 +52,15 @@ export const completedColorsSchema = baseColorsSchema.extend({
 });
 export type CompletedJamRoomColors = z.infer<typeof completedColorsSchema>;
 
+
+export const jamScheduleSchema = z.object({
+    date: z.string().datetime(),
+    time: z.string(),
+    timezone: z.string(),
+    repeat: z.enum(['weekly', 'monthly']).optional(),
+});
+export type JamSchedule = z.infer<typeof jamScheduleSchema>;
+
 export const jamRoomSchema = z.object({
     id: z.string().min(4),
     name: z.string(),
@@ -79,7 +88,9 @@ export const jamRoomSchema = z.object({
     }).partial().optional(),
     theme: z.object({
         colors: colorsSchema.optional()
-    }).optional()
+    }).optional(),
+    closed: z.boolean().optional(),
+    schedule: jamScheduleSchema.optional(),
 }).openapi('JamRoom');
 
 export type JamRoom = z.infer<typeof jamRoomSchema>;
@@ -118,9 +129,10 @@ export interface JamState {
     }
 }
 
-export interface Modal {
+export interface Modal<T extends SvelteComponent = SvelteComponent> {
     id: string,
-    component: ComponentType
+    componentType: ComponentType<T>,
+    props: ComponentProps<T>,
 }
 
 export const jamReactionSchema = z.object({
@@ -147,12 +159,15 @@ export const participantMetadataSchema = z.object({
     identity: identityInfoSchema,
     state: participantStateSchema
 })
+export type ParticipantMetadata = z.infer<typeof participantMetadataSchema>;
 
 export const uxConfigSchema = z.object({
     autoJoin: z.boolean().optional(),
     autoRejoin: z.boolean().optional(),
     autoCreate: z.boolean().optional(),
     userInteracted: z.boolean().optional(),
+    noWebviewWarning: z.boolean().optional(),
+    noLeave: z.boolean().optional(),
 });
 
 export const dynamicConfigSchema = z.object({
@@ -210,6 +225,7 @@ export interface RoomAPI {
     removeModerator: (participantId: string) => Promise<boolean>,
     removePresenter: (participantId: string) => Promise<boolean>,
     updateInfo: (info: IdentityInfo) => Promise<boolean>,
+    updateState: (state: ParticipantState) => void,
     enterRoom: () => Promise<void>,
     leaveRoom: () => void,
     leaveStage: () => Promise<boolean>,
@@ -217,11 +233,13 @@ export interface RoomAPI {
     autoJoinOnce: () => void,
     switchCamera: () => Promise<boolean>,
     setCameraOn: (cameraOn: boolean) => Promise<LocalTrackPublication | undefined>,
+    toggleCamera: () => Promise<LocalTrackPublication | undefined>,
     selectMicrophone: (mic: InputDeviceInfo) => Promise<boolean>,
     startScreenShare: () => Promise<LocalTrackPublication | undefined>,
     stopScreenShare: () => Promise<LocalTrackPublication | undefined>,
-    startServerRecording: () => void,
-    stopServerRecording: () => void,
+    startRecording: () => void,
+    stopRecording: () => void,
+    downloadRecording: () => void,
     startPodcastRecording: () => void,
     stopPodcastRecording: () => void,
 }
@@ -229,12 +247,14 @@ export interface RoomAPI {
 export interface ServerAPI {
     createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) => Promise<boolean>,
     getRoom: (roomId: string) => Promise<JamRoom>,
+    isAdmin: (participantId: string) => Promise<boolean>,
     addAdmin: (participantId: string) => Promise<boolean>,
     removeAdmin: (participantId: string) => Promise<boolean>,
 }
 
 export interface ParticipantContext {
-    livekitParticipant: Readable<Participant>,
+    id: string,
+    participant: Readable<Participant>,
     info: Readable<IdentityInfo>,
     state: Readable<ParticipantState>,
     tracks: Readable<Track[]>,
@@ -243,11 +263,21 @@ export interface ParticipantContext {
 
 }
 
+export interface Me {
+    iModerate: boolean,
+    iSpeak: boolean,
+    info: IdentityInfo,
+    context: ParticipantContext,
+    hasMicFailed: boolean,
+}
+
 export interface RoomContext {
     state: {
         roomId: string,
         livekitRoom: Readable<ClientRoom>,
         jamRoom: Readable<JamRoom | undefined>,
+        colors: Readable<CompletedJamRoomColors>,
+        me: Readable<Me>,
         participants: Readable<ParticipantContext[]>,
     },
     api: Readable<RoomAPI>,
@@ -258,8 +288,18 @@ export interface ServerContext {
     api: Readable<ServerAPI>,
 }
 
+export interface ActionsContext {
+    showActions: Writable<boolean>,
+    showRoleActions: Writable<string | undefined>,
+}
+
 export interface TokenEngine {
     signData: (keyPair: KeyPair, payload: unknown) => Promise<string>,
     verify: <T = unknown>(token: string, key?: string) => Promise<{key: string, payload: T} | undefined>
     signedToken: (keyPair: KeyPair) => Promise<string>,
 }
+
+export const adminStatusSchema = z.object({
+    admin: z.boolean()
+});
+export type AdminStatus = z.infer<typeof adminStatusSchema>;

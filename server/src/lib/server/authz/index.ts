@@ -17,7 +17,7 @@ export const isModerator = (room: JamRoom, identity?: IdentityInfo) => !!identit
 
 export const isAdmin = async (identity?: IdentityInfo) => {
   const adminKeys = await get('server/admins') as string[];
-  return identity && adminKeys.includes(identity.id);
+  return !!identity && adminKeys.includes(identity.id);
 };
 
 

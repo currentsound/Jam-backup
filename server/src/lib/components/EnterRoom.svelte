@@ -14,6 +14,34 @@ export let roomId;
 export let room;
 export let forbidden;
   const roomColors = colors(room);
+
+// {#if !iMayEnter}
+// <EnterRoom roomId={roomId} name={name} forbidden={true} />
+//
+// {:else if !iModerate && closed}
+// <EnterRoom
+//         roomId={roomId}
+// name={name}
+// description={description}
+// schedule={schedule}
+// logoURI={logoURI}
+// closed={closed}
+// buttonURI={buttonURI}
+// buttonText={buttonText}
+// />
+//
+// {:else if !hasEnteredRoom}
+// <EnterRoom
+//         roomId={roomId}
+// name={name}
+// description={description}
+// schedule={schedule}
+// logoURI={logoURI}
+// />
+
+
+
+
 </script>
     <Container>
       <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
