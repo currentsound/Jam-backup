@@ -24,6 +24,19 @@ const publishableSources = (room: JamRoom, identity: IdentityInfo) => {
     return sources;
 }
 
+export const createOrUpdateRoom = async (room: JamRoom) => {
+    const metadata = JSON.stringify(room);
+    const existingRoom = await roomServiceClient.listRooms([room.id]).then(rooms => rooms[0]);
+    if(existingRoom && existingRoom.metadata !== metadata) {
+        await roomServiceClient.updateRoomMetadata(room.id, metadata);
+    } else {
+        await roomServiceClient.createRoom({
+            name: room.id,
+            metadata,
+        });
+    }
+}
+
 export const createAccessToken = (room: JamRoom, identity: IdentityInfo) => {
     const at = new AccessToken(livekitKey, livekitSecret, {
         identity: identity.id,

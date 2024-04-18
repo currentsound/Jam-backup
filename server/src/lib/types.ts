@@ -156,7 +156,7 @@ export const participantStateSchema = z.object({
 export type ParticipantState = z.infer<typeof participantStateSchema>;
 
 export const participantMetadataSchema = z.object({
-    identity: identityInfoSchema,
+    info: identityInfoSchema,
     state: participantStateSchema
 })
 export type ParticipantMetadata = z.infer<typeof participantMetadataSchema>;
@@ -254,20 +254,24 @@ export interface ServerAPI {
 
 export interface ParticipantContext {
     id: string,
-    participant: Readable<Participant>,
-    info: Readable<IdentityInfo>,
-    state: Readable<ParticipantState>,
-    tracks: Readable<Track[]>,
-    isSpeaking: Readable<boolean>,
-    reactions: Readable<JamReaction[]>,
-
+    participant: Participant,
+    info: IdentityInfo,
+    state: ParticipantState,
+    tracks: Track[],
+    cameraTrack: Track<Track.Kind.Video> | undefined,
+    microphoneTrack: Track<Track.Kind.Audio> | undefined,
+    microphoneEnabled: boolean,
+    microphoneMuted: boolean,
+    screenTrack: Track<Track.Kind.Video> | undefined,
+    isSpeaking: boolean,
+    roles: {
+        speaker: boolean,
+        moderator: boolean,
+        presenter: boolean,
+    }
 }
 
-export interface Me {
-    iModerate: boolean,
-    iSpeak: boolean,
-    info: IdentityInfo,
-    context: ParticipantContext,
+export interface Me extends ParticipantContext {
     hasMicFailed: boolean,
 }
 
@@ -279,6 +283,7 @@ export interface RoomContext {
         colors: Readable<CompletedJamRoomColors>,
         me: Readable<Me>,
         participants: Readable<ParticipantContext[]>,
+        reactions: Readable<Record<string, JamReaction[]>>
     },
     api: Readable<RoomAPI>,
 }

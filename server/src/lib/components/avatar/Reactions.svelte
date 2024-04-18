@@ -1,13 +1,18 @@
 <script lang="ts">
     import AnimatedEmoji from "./AnimatedEmoji.svelte";
-    import type {JamReaction} from "$lib/types";
+    import {getRoomContext} from "$lib/client/stores/room";
 
-    export let reactions: JamReaction[];
+    export let participantId: string;
     export let className: string;
     export let style: string = '';
+
+    const {state: {reactions}} = getRoomContext();
+
+    const participantReactions = $reactions[participantId] || [];
+
 </script>
 
-{#each reactions as reaction (reaction.id)}
+{#each participantReactions as reaction (reaction.id)}
 
     <AnimatedEmoji
             key={reaction.id}

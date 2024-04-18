@@ -3,7 +3,6 @@ import Container from './Container.svelte';
 import {mqp} from "$lib/client/stores/styles";
 import {getRoomContext, userInteracted} from "$lib/client/stores/room";
 import type {EventHandler} from "svelte/elements";
-import {createRoom} from "$lib/client/backend";
 import type {JamRoom} from "$lib/types";
 import {getServerContext} from "$lib/client/stores/server";
 

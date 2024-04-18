@@ -19,7 +19,7 @@
         userAgent.browser?.name !== 'Mobile Safari'));
 
 
-  const {state: {roomId, livekitRoom, jamRoom, me, participants, colors}, api} = getRoomContext();
+  const {state: {jamRoom, me, participants, colors}} = getRoomContext();
 
   useWakeLock();
   usePushToTalk();
@@ -29,18 +29,10 @@
   let myInfo = $me.info;
 
   let {
-    name,
-    description,
-    logoURI,
-    buttonURI,
-    buttonText,
     speakers,
-    moderators,
     closed,
     stageOnly,
   } = $jamRoom || {};
-
-  let myPeerId = myInfo.id;
 
 
 
@@ -48,8 +40,6 @@
   let audienceParticipants = stageOnly
      ? []
      : $participants.filter(p => !stageParticipants.map(p => p.id).includes(p.id));
-
-  let {noLeave} = $dynamicConfig.ux || {};
 
   const {showActions, showRoleActions} = initializeActionsContext();
 
@@ -118,24 +108,22 @@
           </svg>
           Room is closed
         </div>
-        <RoomHeader
-          {...{name, description, logoURI, buttonURI, buttonText}}
-        />
+        <RoomHeader/>
 
         <div class="">
           <div class="">
             <ol class="flex flex-wrap">
-              {#if $me.iSpeak}
+              {#if $me.roles.speaker}
                 <StageAvatar
-                  participantContext={$me.context}
+                  participantContext={$me}
                   canSpeak={!$me.hasMicFailed}
                   onClick={() => showActions.set(true)}
                 />
               {/if}
               {#each stageParticipants as participantContext (participantContext.id)}
                   <StageAvatar
-                    participantContext={$me.context}
-                    onClick={$me.iModerate ? () => showRoleActions.set($me.info.id) : undefined}
+                    participantContext={participantContext}
+                    onClick={$me.roles.moderator ? () => showRoleActions.set(myInfo.id) : undefined}
                   />
               {/each}
             </ol>
@@ -147,16 +135,16 @@
                 Audience
               </h3>
               <ol class="flex flex-wrap">
-                {#if !$me.iSpeak }
+                {#if !$me }
                   <AudienceAvatar
-                      participantContext={$me.context}
+                      participantContext={$me}
                       onClick={() => showActions.set(true)}
                   />
                 {/if}
                 {#each audienceParticipants as participantContext (participantContext.id)}
                   <AudienceAvatar
                           participantContext={participantContext}
-                    onClick={$me.iModerate ? () => showRoleActions.set(participantContext.id) : undefined}
+                    onClick={$me.roles.moderator ? () => showRoleActions.set(participantContext.id) : undefined}
                   />
                 {/each}
               </ol>

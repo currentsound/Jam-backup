@@ -8,6 +8,8 @@
     import StartFromURL from "$lib/components/StartFromURL.svelte";
     import {ConnectionState} from "livekit-client";
     import Room from "$lib/components/Room.svelte";
+    import EnterRoom from "$lib/components/EnterRoom.svelte";
+    import Container from "$lib/components/Container.svelte";
 
     export let style : Partial<CSSStyleDeclaration>;
 
@@ -17,7 +19,9 @@
 
     onMount(() => setContainerForWidth(container));
 
-    const {state: {roomId, jamRoom, livekitRoom}} = getRoomContext();
+    const {state: {roomId, jamRoom, livekitRoom, me}} = getRoomContext();
+
+
 
 </script>
 
@@ -28,16 +32,21 @@
         position: 'relative',
         height: '100%',
         minHeight: '-webkit-fill-available',
-        ...style,
+        ...style
       })}
 >
-
-    {#if !!$jamRoom}
-        {#if $livekitRoom.state === ConnectionState.Connected}
-            <Room />
-        {/if}
+    {#if $livekitRoom.state === ConnectionState.Connected}
+        <Room />
+    {:else if $livekitRoom.state === ConnectionState.Connecting || $livekitRoom.state === ConnectionState.Reconnecting}
+        <Container>
+            Connecting...
+        </Container>
     {:else}
-        <StartFromURL {...{roomId, newRoom: $dynamicConfig.room}} />
+        {#if !!$jamRoom}
+            <EnterRoom />
+        {:else}
+            <StartFromURL {...{roomId, newRoom: $dynamicConfig.room}} />
+        {/if}
     {/if}
     <Modals/>
 </div>

@@ -1,8 +1,8 @@
 <script lang="ts">
-import Container from './Container';
-import RoomHeader from './RoomHeader';
-import {colors} from '$lib/client/utils/theme';
+import Container from './Container.svelte';
+import RoomHeader from './RoomHeader.svelte';
 import {mqp} from "$lib/client/stores/styles";
+import {getRoomContext, userInteracted} from "$lib/client/stores/room";
 
 const iOS =
   /^iP/.test(navigator.platform) ||
@@ -10,10 +10,12 @@ const iOS =
 
 const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
 
-export let roomId;
-export let room;
-export let forbidden;
-  const roomColors = colors(room);
+const {state: {roomId, jamRoom, colors}, api} = getRoomContext();
+
+let room = $jamRoom;
+const forbidden = false;
+  const roomColors = $colors;
+  const otherDevice = false;
 
 // {#if !iMayEnter}
 // <EnterRoom roomId={roomId} name={name} forbidden={true} />
@@ -39,16 +41,15 @@ export let forbidden;
 // logoURI={logoURI}
 // />
 
+let schedule = room?.schedule
 
 
 
 </script>
     <Container>
+      <code>{JSON.stringify(room)}</code>
       <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
-        <RoomHeader
-          colors={roomColors}
-          {...{name, description, logoURI, buttonURI, buttonText}}
-        />
+        <RoomHeader/>
         <p class="hidden pt-4 pb-4">
           🗓 February 3rd 2021 at ⌚️ 14:06 (Vienna Time)
         </p>
@@ -77,19 +78,16 @@ export let forbidden;
         {/if}
 
         <button
-          onClick={() => {
-            setProps({userInteracted: true});
-            enterRoom(roomId);
+          on:click={() => {
+            userInteracted.set(true);
+            $api.enterRoom();
           }}
           class={
             closed || forbidden
               ? 'hidden'
               : 'mt-5 select-none w-full h-12 px-6 text-lg text-white bg-gray-600 rounded-lg focus:shadow-outline active:bg-gray-600'
           }
-          style={{
-            backgroundColor: roomColors.buttonPrimary,
-            color: roomColors.background,
-          }}
+          style="background-color: {roomColors.buttonPrimary}; color: {roomColors.background}"
         >
           Join
         </button>
@@ -101,7 +99,7 @@ export let forbidden;
               : 'hidden'
           }
           href={`/${roomId}.ics`}
-          download={`${name || 'room'}.ics`}
+          download={`${room?.name || 'room'}.ics`}
         >
           🗓 Add to Calendar
         </a>

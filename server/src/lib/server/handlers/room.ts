@@ -1,19 +1,10 @@
 import {accessor, controller} from "$lib/server/handlers/helpers";
 import {type JamRoom, jamRoomSchema, type Success} from "$lib/types";
 import {roomAuthorizer} from "../authz";
-import {roomServiceClient} from "$lib/server/services/livekit";
+import {createOrUpdateRoom, roomServiceClient} from "$lib/server/services/livekit";
 import {forbidden, notFound} from "$lib/server/errors";
 import type {RequestEvent} from "@sveltejs/kit";
 
-
-const createLivekitRoom = async (room: JamRoom) =>
-   roomServiceClient.createRoom({
-      name: room.id,
-      metadata: JSON.stringify(room),
-   });
-
-const updateLivekitRoom = async (room: JamRoom) =>
-    roomServiceClient.updateRoomMetadata(room.id, JSON.stringify(room));
 
 export const roomAccessor = accessor<JamRoom>({prefix: 'rooms'});
 export const roomHandler = controller<JamRoom>({
@@ -22,8 +13,8 @@ export const roomHandler = controller<JamRoom>({
    authorizer: roomAuthorizer,
    broadcastRoom: (id) => id,
    broadcastChannel: () => 'room-info',
-    postPost: createLivekitRoom,
-    postPut: updateLivekitRoom
+    postPost: createOrUpdateRoom,
+    postPut: createOrUpdateRoom
 });
 
 export const leaveStage = async (params: {id: string, speakerId: string}, event: RequestEvent): Promise<Success> => {
@@ -37,6 +28,6 @@ export const leaveStage = async (params: {id: string, speakerId: string}, event:
     }
     const updatedRoom = {...room, speakers: room.speakers.filter(id => id !== params.speakerId)};
     await roomAccessor.set(updatedRoom);
-    await updateLivekitRoom(updatedRoom);
+    await createOrUpdateRoom(updatedRoom);
     return {success: true}
 }

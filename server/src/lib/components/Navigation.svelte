@@ -3,8 +3,6 @@
 import Actions from './actions/Actions.svelte';
 import {breakpoints, getWidth} from '$lib/client/stores/styles';
 import {toStyleString} from '$lib/client/utils/css';
-import {openModal} from '$lib/client/stores/modals';
-import InfoModal from './InfoModal.svelte';
 import MicOffSvg from './svg/MicOffSvg.svelte';
 import MicOnSvg from './svg/MicOnSvg.svelte';
 import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
@@ -32,58 +30,27 @@ let navigationStyleSmall = {
   borderRight: '0px',
 };
 
-// export default function Navigation({
-//   roomId,
-//   room,
-//   editRole,
-//   setEditRole,
-//   editSelf,
-//   setEditSelf,
-//   noLeave,
-// }) {
-//   const [
-//     state,
-//     {leaveRoom, sendReaction, retryMic, setProps, switchCamera, setCameraOn},
-//   ] = useJam();
-//   let [myAudio, micMuted, handRaised, iSpeak, myVideo] = use(state, [
-//     'myAudio',
-//     'micMuted',
-//     'handRaised',
-//     'iAmSpeaker',
-//     'myVideo',
-//   ]);
-
-    const {state: {me, jamRoom, roomId, colors}, api} = getRoomContext();
-  const myInfo = $me.info;
-  const myState = $me.context.state
-
-const {handRaised} = $myState;
+    let {state: {me, jamRoom, roomId, colors, livekitRoom}, api} = getRoomContext();
+    let {state: {handRaised}, roles: {speaker}, microphoneTrack} = $me;
 
 
-    const {ux} = $dynamicConfig || {};
+    let micOn = false;
+    let micMuted = false;
+    let showReactions = false;
+    let isColorDark = isDark($colors.buttonPrimary);
+    let {ux} = $dynamicConfig || {};
+    let {showActions, showRoleActions} = getActionsContext();
+    let width = getWidth();
 
-    const {showActions, showRoleActions} = getActionsContext();
 
-
-const { context: {participant}, iSpeak } = $me;
-    let micOn = $participant.isMicrophoneEnabled;
-    const micMuted = !micOn;
-
-  let showReactions = false;
-
-  let {speakers, moderators, stageOnly} = $jamRoom || {};
-
-  const roomColors = $colors;
-
-  let isColorDark = isDark(roomColors.buttonPrimary);
-
-  let width = getWidth();
-
-  let backgroundColor = roomColors.background;
+  $: {
+      micOn = $me.microphoneEnabled;
+      micMuted = $me.microphoneMuted;
+  }
 
   let talk = () => {
     if (!micOn) {
-        ($participant as LocalParticipant).setMicrophoneEnabled(true);
+        ($me.participant as LocalParticipant).setMicrophoneEnabled(true);
     }
   }
 
@@ -94,9 +61,10 @@ const { context: {participant}, iSpeak } = $me;
         ...navigationStyle,
         ...($width < breakpoints.sm ? navigationStyleSmall : null),
         width: $width < 720 ? '100%' : '700px',
-        backgroundColor,
+        backgroundColor: $colors.background,
       })}
     >
+        <p>{micOn}, {micMuted}, {$livekitRoom.localParticipant.isMicrophoneEnabled}, {!!$me.microphoneTrack}</p>
       {#if $showRoleActions}
         <RoleActions
           participantId={$showRoleActions}
@@ -105,34 +73,31 @@ const { context: {participant}, iSpeak } = $me;
       {#if $showActions} <Actions />{/if}
       <div class="flex flex-wrap space-x-0.5">
         <button
-          on:click={iSpeak ? talk : () => $api.updateState({handRaised: !handRaised})}
+          on:click={speaker ? talk : () => $api.updateState({handRaised: !handRaised})}
           on:keyup={e => (e.key === ' ') && e.preventDefault()}
           class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
           style={toStyleString({
-            backgroundColor: roomColors.buttonPrimary,
+            backgroundColor: $colors.buttonPrimary,
             color: isColorDark ? 'white' : 'black',
           })}
         >
-          {#if iSpeak}
+          {#if speaker}
               {#if micOn && micMuted}
                   <MicOffSvg
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
-                    stroke={roomColors.buttonPrimary}
+                    stroke={$colors.buttonPrimary}
                   />
                   &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;off
-              {/if}
-              {#if micOn && !micMuted}
+              {:else if micOn && !micMuted}
                   <MicOnSvg
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
-                    stroke={roomColors.buttonPrimary}
+                    stroke={$colors.buttonPrimary}
                   />
                   &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;on
-              {/if}
-              {#if micOn}
+              {:else if !micOn}
                 Allow&nbsp;microphone&nbsp;access
               {/if}
-          {/if}
-          {#if !iSpeak}
+          {:else}
               {#if handRaised}
                 Stop&nbsp;raising&nbsp;hand
               {:else}
@@ -140,12 +105,12 @@ const { context: {participant}, iSpeak } = $me;
               {/if}
           {/if}
         </button>
-        {#if $jamRoom?.videoEnabled && iSpeak}
+        {#if $jamRoom?.videoEnabled && speaker}
             <button
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
               on:click={() => $api.toggleCamera()}
             >
-              Camera {$participant.isCameraEnabled ? 'Off' : 'On'}
+              Camera {$me.participant.isCameraEnabled ? 'Off' : 'On'}
             </button>
             <button
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
@@ -160,7 +125,7 @@ const { context: {participant}, iSpeak } = $me;
         <button
           on:click={() => showReactions = !showReactions}
           class="flex-grow select-none text-center h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
-          style="background-color: {roomColors.buttonSecondary}"
+          style="background-color: {$colors.buttonSecondary}"
         >
           <svg
             class="w-6 h-6 inline-block"
@@ -185,7 +150,7 @@ const { context: {participant}, iSpeak } = $me;
                 on:click={() => {
                   $api.sendReaction(r);
                 }}
-                style="background-color: {roomColors.buttonSecondary}"
+                style="background-color: {$colors.buttonSecondary}"
               >
                 {r}
               </button>
@@ -193,34 +158,12 @@ const { context: {participant}, iSpeak } = $me;
           </div>
         {/if}
 
-        <button
-          on:click={() => {
-            openModal(InfoModal);
-          }}
-          class="hidden ml-3 select-none h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
-          style="background-color: {roomColors.buttonSecondary}"
-        >
-          <svg
-            class="w-6 h-6"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="{2}"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </button>
 
         {#if !ux?.noLeave }
           <button
             class="flex-shrink ml-3 select-none h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
             on:click={$api.leaveRoom}
-            style="backgroundColor: {roomColors.buttonSecondary}"
+            style="background-color: {$colors.buttonSecondary}"
           >
             🖖🏽&nbsp;Leave
           </button>

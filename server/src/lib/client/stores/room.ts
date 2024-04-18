@@ -1,12 +1,4 @@
-import {
-    type LocalParticipant,
-    Participant,
-    ParticipantEvent,
-    RemoteParticipant,
-    Room,
-    RoomEvent,
-    Track
-} from "livekit-client";
+import {Participant, ParticipantEvent, RemoteParticipant, Room, RoomEvent, Track} from "livekit-client";
 import {derived, readable, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
@@ -22,16 +14,11 @@ import {
     type StaticConfig
 } from "$lib/types";
 import {createRoomApi} from "$lib/client/api";
-import {toJamRoom} from "$lib/client/utils/livekit";
+import {getMetadata, getMicrophoneTrack, toJamRoom} from "$lib/client/utils/livekit";
 import {identitiesStore} from "$lib/client/stores/identity";
 import {colors} from "$lib/client/utils/theme";
 
-const defaultListenedRoomEvents: RoomEvent[] = [
-    RoomEvent.Disconnected,
-    RoomEvent.ParticipantConnected,
-    RoomEvent.ConnectionStateChanged,
-    RoomEvent.RoomMetadataChanged,
-];
+const defaultListenedRoomEvents: RoomEvent[] = Object.values(RoomEvent);
 
 
 
@@ -90,7 +77,9 @@ const participantEventListener = <T>(
 
 const participantStreamsEvents = [
     ParticipantEvent.TrackUnsubscribed,
-    ParticipantEvent.TrackSubscribed
+    ParticipantEvent.TrackSubscribed,
+    ParticipantEvent.TrackPublished,
+    ParticipantEvent.TrackUnpublished
 ]
 
 const getParticipantTracks = (participant: Participant) => participantListener<Track[]>(participant, participantStreamsEvents, (participant): Track<Track.Kind>[] =>
@@ -123,15 +112,32 @@ export const getParticipantReactions = (participant: Participant) => participant
         }
     })
 
+export const getReactions = (room: Room) =>
+    readable<Record<string, JamReaction[]>>({}, (set, update) => {
+        room.on(RoomEvent.DataReceived, (payload, participant, kind) => {
+            const receivedData = JSON.parse(new TextDecoder().decode(payload)) as JamMessage;
+            if(receivedData.type === 'reaction') {
+                const id = participant?.identity;
+                if(!id) {
+                    return;
+                }
+                update(reactions => {
+                    const oldList = reactions[participant.identity] || [];
+                    const newList = [receivedData, ...oldList];
+                    return {...reactions, [id]: newList};
+                });
+                setTimeout(
+                    () => update(
+                        reactions => ({...reactions, [id]: reactions[id].filter(
+                            r => r.id !== receivedData.id)}
+                    )),
+                    5000
+                )
+            }
+        })
+    });
 
-export const getParticipantInfo = (participant: Participant) => participantListener<IdentityInfo>(participant, [ParticipantEvent.ParticipantMetadataChanged], (participant) => {
-    const parseResult = participantMetadataSchema.safeParse(JSON.parse(participant?.metadata || '{}'));
-    if(parseResult.success) {
-        return parseResult.data.identity;
-    } else {
-        return {id: participant.identity};
-    }
-})
+
 
 export const getParticipantState = (participant: Participant) => participantListener<ParticipantState>(participant, [ParticipantEvent.ParticipantMetadataChanged], (participant) => {
         const parseResult = participantMetadataSchema.safeParse(JSON.parse(participant.metadata || '{}'));
@@ -145,15 +151,44 @@ export const getParticipantState = (participant: Participant) => participantList
 
 export const userInteracted = writable<boolean>(false);
 
-const participantContext = (participant: Participant): ParticipantContext => ({
-    id: participant.identity,
-    participant: participantListener(participant),
-    info: getParticipantInfo(participant),
-    state: getParticipantState(participant),
-    tracks: getParticipantTracks(participant),
-    isSpeaking: getIsParticipantSpeaking(participant),
-    reactions: getParticipantReactions(participant),
-});
+const participantContext = (jamRoom?: JamRoom) => (participant: Participant): ParticipantContext => {
+    const tracks =
+        [...participant.trackPublications.values()]
+            .map((tp) => tp.track)
+            .filter(Boolean) as Track<Track.Kind>[];
+
+    const {state, info} = getMetadata(participant);
+
+    const id = participant.identity;
+
+    const microphoneTrack = getMicrophoneTrack(participant);
+
+    const microphoneEnabled = !!microphoneTrack;
+    const microphoneMuted = !!microphoneTrack?.isMuted;
+
+    return {
+        id,
+        participant,
+        info,
+        state,
+        tracks,
+        cameraTrack: tracks.find(track =>
+                    track.kind === Track.Kind.Video && track.source === Track.Source.Camera
+                ) as Track<Track.Kind.Video> | undefined,
+        microphoneTrack,
+        microphoneEnabled,
+        microphoneMuted,
+        screenTrack: tracks.find(track =>
+                    track.kind === Track.Kind.Video && track.source === Track.Source.ScreenShare
+                ) as Track<Track.Kind.Video> | undefined,
+        isSpeaking: participant.isSpeaking,
+        roles: {
+            speaker: !!jamRoom?.speakers.includes(id),
+            moderator: !!jamRoom?.moderators.includes(id),
+            presenter: !!jamRoom?.moderators.includes(id),
+        }
+    }
+};
 
 export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, jamRoom: JamRoom | undefined) => {
 
@@ -166,10 +201,14 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     const livekitRoomStore = roomListener(livekitRoom);
     const jamRoomStore = roomListener<JamRoom | undefined>(
         livekitRoom,
-        [RoomEvent.RoomMetadataChanged, RoomEvent.ConnectionStateChanged],
+        [RoomEvent.RoomMetadataChanged],
         toJamRoom,
         jamRoom
         );
+
+    livekitRoomStore.subscribe(console.log);
+
+    const reactions = getReactions(livekitRoom);
 
     const api = derived(
         [livekitRoomStore, identitiesStore, jamRoomStore],
@@ -178,18 +217,12 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
 
 
     const me = derived(
-        [livekitRoomStore, identitiesStore, jamRoomStore],
-        ([$room, $identities, $jamRoom]) => {
-            const identity = $identities[roomId] ?? $identities._default;
-            return {
-                iModerate: !!$jamRoom?.moderators.includes(identity.publicKey),
-                iSpeak: $jamRoom?.stageOnly || !!$jamRoom?.speakers.includes(identity.publicKey),
-                info: identity.info,
-                context: participantContext($room.localParticipant),
-                hasMicFailed: !!$room.localParticipant.lastMicrophoneError
-            }
-        }
-        )
+        [livekitRoomStore, jamRoomStore],
+        ([$room, $jamRoom]) => ({
+            ...participantContext($jamRoom)($room.localParticipant),
+            hasMicFailed: !!$room.localParticipant.lastMicrophoneError
+        })
+    );
 
     const context: RoomContext = {
         state: {
@@ -198,16 +231,13 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
             jamRoom: jamRoomStore,
             colors: derived(jamRoomStore, ($jamRoom) => colors($jamRoom)),
             me,
-            participants: roomListener<ParticipantContext[]>(
-                livekitRoom,
-                [
-                    RoomEvent.ParticipantConnected,
-                    RoomEvent.ParticipantDisconnected,
-                ],
-                (room) =>
+            participants: derived(
+                [livekitRoomStore, jamRoomStore],
+                ([$livekitRoom, $jamRoom]) =>
                     [
-                        ...(Object.values(room.remoteParticipants) as RemoteParticipant[])
-                    ].map(participantContext)),
+                        ...(Object.values($livekitRoom.remoteParticipants) as RemoteParticipant[])
+                    ].map(participantContext($jamRoom))),
+            reactions,
         },
         api,
 

@@ -2,7 +2,7 @@ import {
     type DynamicConfig,
     type Identities,
     type IdentityInfo,
-    type IdentityWithKeys, type JamAccess,
+    type JamAccess,
     type JamRoom, type ParticipantMetadata, participantMetadataSchema, type ParticipantState,
     type RoomAPI, type ServerAPI,
     type StaticConfig
@@ -31,7 +31,7 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         participantMetadataSchema,
         JSON.parse(room.localParticipant.metadata || '{}'),
         {
-            identity: identity.info,
+            info: identity.info,
             state: {
                 handRaised: false,
             }
@@ -49,17 +49,23 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         removePresenter: (participantId: string) => updateRoom((room) => ({...room, presenters: room.presenters.filter(id => id != participantId)})),
         updateInfo: (info: IdentityInfo) => {
             identity.info = info;
-            setMetadata({...getMetadata(), identity: info})
+            setMetadata({...getMetadata(), info})
             return updateIdentity(roomId, identity);
         },
         updateState: (stateUpdate: Partial<ParticipantState>) => {
-            const {identity, state} = getMetadata();
-            setMetadata({identity , state: {...state, ...stateUpdate}});
+            const {info, state} = getMetadata();
+            setMetadata({info , state: {...state, ...stateUpdate}});
         },
         enterRoom: () => backend
             .getToken(identity, roomId)
             .then((result: JamAccess | undefined) => result && room.connect(result.livekitUrl, result.token))
-            .then(() => setMetadata({identity: identity.info, state: {handRaised: false}})),
+            .then(() => setMetadata({info: identity.info, state: {handRaised: false}}))
+            .then(async () => {
+                if(jamRoom?.speakers.includes(identity.publicKey)) {
+                    await room.localParticipant.setMicrophoneEnabled(true);
+                    console.log(room.localParticipant.isMicrophoneEnabled);
+                }
+            }),
         leaveRoom: () => room.disconnect(),
         leaveStage: () => backend.deleteRequest(identity, `/rooms/${roomId}/speakers/${identity.publicKey}`),
         sendReaction: (reaction: string) => sendJamMessage(room, {id: uuidv7(), type: 'reaction', reaction}),
