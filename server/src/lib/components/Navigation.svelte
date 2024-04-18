@@ -29,8 +29,8 @@ let navigationStyleSmall = {
   borderRight: '0px',
 };
 
-    let {state: {me, jamRoom, roomId, colors, livekitRoom}, api} = getRoomContext();
-    let {state: {handRaised}, roles: {speaker}, microphoneTrack} = $me;
+    let {state: {me, jamRoom, colors}, api} = getRoomContext();
+    let {state: {handRaised}, roles: {speaker}} = $me;
 
 
     let micOn = false;

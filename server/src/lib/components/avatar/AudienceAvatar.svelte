@@ -2,18 +2,31 @@
     import {mqp} from '$lib/client/stores/styles';
     import {avatarUrl, displayName} from "$lib/client/utils/avatar";
 
-    import {type CompletedJamRoomColors, identityInfoSchema, type ParticipantContext} from "$lib/types.js";
-    import {getCameraTrack, getRoomContext} from "$lib/client/stores/room";
+    import {
+        type IdentityInfo,
+    } from "$lib/types.js";
+    import {getParticipantContext, getRoomContext} from "$lib/client/stores/room";
     import Reactions from "$lib/components/avatar/Reactions.svelte";
     import TwitterHandle from "$lib/components/avatar/TwitterHandle.svelte";
+    import type {Participant} from "livekit-client";
 
 
-    export let participantContext: ParticipantContext;
+    export let participant: Participant;
     export let onClick: ((event: Event) => void) | undefined = undefined;
 
 
     const {state: {jamRoom}} = getRoomContext();
-    const {info, id, state} = participantContext;
+    const participantContext = getParticipantContext(participant, jamRoom);
+
+    let info: IdentityInfo;
+    let handRaised: boolean;
+
+    $: {
+        info = $participantContext.info;
+        handRaised = $participantContext.state.handRaised;
+    }
+
+
 
 
 </script>
@@ -32,12 +45,12 @@
                 on:click={onClick}
         />
         <Reactions
-                participantId={id}
+                participantId={participant.identity}
                 className={mqp(
     'absolute bg-white text-4xl md:text-6xl pt-3 md:pt-4 human-radius w-16 h-16 md:w-24 md:h-24 border text-center'
     )}
         />
-        <div class={state.handRaised ? '' : 'hidden'}>
+        <div class={handRaised ? '' : 'hidden'}>
             <div
                     class={mqp(
     'absolute w-9 h-9 top-0 left-0 md:top-0 md:left-0 rounded-full bg-white text-lg border-2 border-gray-400 flex items-center justify-center'

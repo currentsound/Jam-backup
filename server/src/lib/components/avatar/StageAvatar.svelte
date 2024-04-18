@@ -2,30 +2,42 @@
   import {mqp} from '$lib/client/stores/styles';
   import {displayName, avatarUrl} from "$lib/client/utils/avatar";
   import {
+    getParticipantContext,
     getRoomContext,
   } from '$lib/client/stores/room';
 
   import SpeakerRing from './SpeakerRing.svelte';
   import Video from './Video.svelte';
   import Reactions from './Reactions.svelte';
-  import {MicOffSvg} from '../svg';
+  import {MicOffSvg} from '../svg/index';
   import TwitterHandle from './TwitterHandle.svelte';
-  import {type ParticipantContext} from "$lib/types.js";
+  import type {Participant} from "livekit-client";
+  import type {IdentityInfo} from "$lib/types";
 
-
-  export let participantContext: ParticipantContext;
+  export let participant: Participant;
   export let onClick;
   export let canSpeak: boolean = true;
 
-  const {roles: {moderator}, participant, info, id, isSpeaking, cameraTrack, microphoneTrack} = participantContext;
-
-  const video = cameraTrack?.mediaStream;
-
-  let mirror = participant.isLocal;
 
   const {state: {jamRoom, colors}} = getRoomContext();
+  const participantContext = getParticipantContext(participant, jamRoom);
 
-  const micMuted = microphoneTrack?.isMuted;
+  let mirror = participant?.isLocal;
+
+  let video: MediaStream | undefined;
+  let micMuted: boolean;
+  let info: IdentityInfo;
+  let isSpeaking: boolean;
+  let moderator: boolean;
+
+
+  $: {
+    micMuted = !!$participantContext.microphoneTrack?.isMuted;
+    video = $participantContext.cameraTrack?.mediaStream;
+    info = $participantContext.info;
+    isSpeaking = $participantContext.isSpeaking;
+    moderator = $participantContext.roles.moderator;
+  }
 
 </script>
       <li
@@ -64,7 +76,7 @@
 
             {/if}
             <Reactions
-              participantId={id}
+              participantId={participant.identity}
               className={mqp(
                 'absolute text-5xl md:text-7xl pt-4 md:pt-5 human-radius w-20 h-20 md:w-28 md:h-28 border text-center'
               )}
@@ -77,7 +89,7 @@
             class={mqp(
               'absolute w-10 h-10 right-0 top-12 md:top-20 rounded-full bg-white border-2 text-2xl border-gray-400 flex items-center justify-center'
             )}
-            style="background-color: {$colors.textLight}"
+            style="background-color: {$colors.buttonSecondary}"
           >
             <MicOffSvg
               className="w-5 h-5"

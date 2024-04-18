@@ -1,5 +1,5 @@
 import {Participant, ParticipantEvent, RemoteParticipant, Room, RoomEvent, Track} from "livekit-client";
-import {derived, readable, type Updater, writable} from "svelte/store";
+import {derived, type Readable, readable, type Stores, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
     type ActionsContext,
@@ -151,6 +151,7 @@ export const getParticipantState = (participant: Participant) => participantList
 
 export const userInteracted = writable<boolean>(false);
 
+
 const participantContext = (jamRoom?: JamRoom) => (participant: Participant): ParticipantContext => {
     const tracks =
         [...participant.trackPublications.values()]
@@ -189,6 +190,25 @@ const participantContext = (jamRoom?: JamRoom) => (participant: Participant): Pa
         }
     }
 };
+
+export const getParticipantContext = (participant: Participant, jamRoomStore: Readable<JamRoom | undefined>) => derived<Stores, ParticipantContext>(jamRoomStore, ($jamRoom, set) => {
+
+    set(participantContext($jamRoom)(participant));
+    const listener = () => set(participantContext($jamRoom)(participant));
+
+    for(const e of Object.values(ParticipantEvent)) {
+        // @ts-ignore
+        participant.on(e, listener);
+    }
+    return () => {
+        for(const e of Object.values(ParticipantEvent)) {
+            // @ts-ignore
+            participant.removeListener(listener);
+        }
+    }
+})
+
+
 
 export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, jamRoom: JamRoom | undefined) => {
 
@@ -236,7 +256,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
                 ([$livekitRoom, $jamRoom]) =>
                     [
                         ...(Object.values($livekitRoom.remoteParticipants) as RemoteParticipant[])
-                    ].map(participantContext($jamRoom))),
+                    ]),
             reactions,
         },
         api,

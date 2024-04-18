@@ -19,7 +19,7 @@
         userAgent.browser?.name !== 'Mobile Safari'));
 
 
-  const {state: {jamRoom, me, participants, colors}} = getRoomContext();
+  const {state: {livekitRoom, jamRoom, me, participants, colors}} = getRoomContext();
 
   useWakeLock();
   usePushToTalk();
@@ -36,13 +36,12 @@
 
 
 
-  let stageParticipants = stageOnly ? $participants : $participants.filter(p => speakers?.includes(p.id))
+  let stageParticipants = stageOnly ? $participants : $participants.filter(p => speakers?.includes(p.identity))
   let audienceParticipants = stageOnly
      ? []
-     : $participants.filter(p => !stageParticipants.map(p => p.id).includes(p.id));
+     : $participants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
 
   const {showActions, showRoleActions} = initializeActionsContext();
-
 
 </script>
 
@@ -109,20 +108,19 @@
           Room is closed
         </div>
         <RoomHeader/>
-
         <div class="">
           <div class="">
             <ol class="flex flex-wrap">
               {#if $me.roles.speaker}
                 <StageAvatar
-                  participantContext={$me}
+                  participant={$me.participant}
                   canSpeak={!$me.hasMicFailed}
                   onClick={() => showActions.set(true)}
                 />
               {/if}
-              {#each stageParticipants as participantContext (participantContext.id)}
+              {#each stageParticipants as participant (participant.identity)}
                   <StageAvatar
-                    participantContext={participantContext}
+                    participant={participant}
                     onClick={$me.roles.moderator ? () => showRoleActions.set(myInfo.id) : undefined}
                   />
               {/each}
@@ -137,14 +135,14 @@
               <ol class="flex flex-wrap">
                 {#if !$me }
                   <AudienceAvatar
-                      participantContext={$me}
+                      participant={$me.participant}
                       onClick={() => showActions.set(true)}
                   />
                 {/if}
-                {#each audienceParticipants as participantContext (participantContext.id)}
+                {#each audienceParticipants as participant (participant.identity)}
                   <AudienceAvatar
-                          participantContext={participantContext}
-                    onClick={$me.roles.moderator ? () => showRoleActions.set(participantContext.id) : undefined}
+                          participant={participant}
+                    onClick={$me.roles.moderator ? () => showRoleActions.set(participant.identity) : undefined}
                   />
                 {/each}
               </ol>
