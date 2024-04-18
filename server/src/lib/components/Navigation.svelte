@@ -3,8 +3,7 @@
 import Actions from './actions/Actions.svelte';
 import {breakpoints, getWidth} from '$lib/client/stores/styles';
 import {toStyleString} from '$lib/client/utils/css';
-import MicOffSvg from './svg/MicOffSvg.svelte';
-import MicOnSvg from './svg/MicOnSvg.svelte';
+import {MicOnSvg, MicOffSvg} from './svg';
 import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {isDark} from "$lib/client/utils/util";
 import {LocalParticipant} from "livekit-client";
@@ -49,7 +48,9 @@ let navigationStyleSmall = {
   }
 
   let talk = () => {
-    if (!micOn) {
+    if (micOn) {
+        $api.toggleMicrophone();
+    } else {
         ($me.participant as LocalParticipant).setMicrophoneEnabled(true);
     }
   }
@@ -64,7 +65,6 @@ let navigationStyleSmall = {
         backgroundColor: $colors.background,
       })}
     >
-        <p>{micOn}, {micMuted}, {$livekitRoom.localParticipant.isMicrophoneEnabled}, {!!$me.microphoneTrack}</p>
       {#if $showRoleActions}
         <RoleActions
           participantId={$showRoleActions}

@@ -1,5 +1,7 @@
 <script lang="ts">
     export let stroke: string = '#4B5563';
+    export let fill: string = 'currentColor';
+    export let className: string = '';
 
 </script>
     <svg
@@ -10,10 +12,10 @@
     width="96.666px"
     height="96.666px"
     viewBox="0 0 96.666 96.666"
-    fill="currentColor"
+    fill="{fill}"
     stroke={stroke}
     style="transform: 'scale(-1,1)'"
-    {...$$restProps}
+    class={className}
     >
     <g>
     <g>

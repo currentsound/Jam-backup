@@ -7,9 +7,9 @@ import {
     type RoomAPI, type ServerAPI,
     type StaticConfig
 } from "$lib/types";
-import type {Room} from "livekit-client";
+import {LocalTrack, type Room} from "livekit-client";
 import {updateIdentity} from "$lib/client/stores/identity";
-import {sendJamMessage} from "$lib/client/utils/livekit";
+import {getMicrophoneTrack, sendJamMessage} from "$lib/client/utils/livekit";
 import * as backend from "$lib/client/backend";
 import {displayName} from "$lib/client/utils/avatar";
 import {uuidv7} from "uuidv7";
@@ -72,6 +72,14 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         autoJoinOnce: () => {},
         switchCamera: () => switchToNextCamera(room),
         setCameraOn: (cameraOn: boolean) => room.localParticipant.setCameraEnabled(cameraOn),
+        toggleMicrophone: async () => {
+            const track = (getMicrophoneTrack(room.localParticipant) as LocalTrack);
+            if(track.isMuted) {
+                await track.unmute();
+            } else {
+                await track.mute();
+            }
+        },
         toggleCamera: () => room.localParticipant.setCameraEnabled(room.localParticipant.isCameraEnabled),
         selectMicrophone: (mic: InputDeviceInfo) => room.switchActiveDevice("audioinput", mic.deviceId),
         startScreenShare: () => room.localParticipant.setScreenShareEnabled(true),

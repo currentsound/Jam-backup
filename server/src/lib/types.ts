@@ -234,6 +234,7 @@ export interface RoomAPI {
     switchCamera: () => Promise<boolean>,
     setCameraOn: (cameraOn: boolean) => Promise<LocalTrackPublication | undefined>,
     toggleCamera: () => Promise<LocalTrackPublication | undefined>,
+    toggleMicrophone: () => void,
     selectMicrophone: (mic: InputDeviceInfo) => Promise<boolean>,
     startScreenShare: () => Promise<LocalTrackPublication | undefined>,
     stopScreenShare: () => Promise<LocalTrackPublication | undefined>,

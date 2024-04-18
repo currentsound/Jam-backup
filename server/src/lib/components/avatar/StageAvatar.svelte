@@ -8,7 +8,7 @@
   import SpeakerRing from './SpeakerRing.svelte';
   import Video from './Video.svelte';
   import Reactions from './Reactions.svelte';
-  import MicOffSvg from '../svg/MicOffSvg.svelte';
+  import {MicOffSvg} from '../svg';
   import TwitterHandle from './TwitterHandle.svelte';
   import {type ParticipantContext} from "$lib/types.js";
 
