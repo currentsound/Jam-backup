@@ -30,9 +30,9 @@ let navigationStyleSmall = {
 };
 
     let {state: {me, jamRoom, colors}, api} = getRoomContext();
-    let {state: {handRaised}, roles: {speaker}} = $me;
+    let {roles: {speaker}} = $me;
 
-
+    let handRaised = false;
     let micOn = false;
     let micMuted = false;
     let showReactions = false;
@@ -45,6 +45,7 @@ let navigationStyleSmall = {
   $: {
       micOn = $me.microphoneEnabled;
       micMuted = $me.microphoneMuted;
+      handRaised = $me.state.handRaised
   }
 
   let talk = () => {
