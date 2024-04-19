@@ -24,6 +24,16 @@ const publishableSources = (room: JamRoom, identity: IdentityInfo) => {
     return sources;
 }
 
+const createGrant = (room: JamRoom, info: IdentityInfo) => ({
+    roomJoin: hasAccessToRoom(room, info), room: room.id,
+    roomAdmin: isModerator(room, info),
+    canSubscribe: true,
+    canPublishData: true,
+    canPublishSources: publishableSources(room, info),
+    canUpdateOwnMetadata: true,
+
+})
+
 export const createOrUpdateRoom = async (room: JamRoom) => {
     const metadata = JSON.stringify(room);
     const existingRoom = await roomServiceClient.listRooms([room.id]).then(rooms => rooms[0]);
@@ -35,6 +45,15 @@ export const createOrUpdateRoom = async (room: JamRoom) => {
             metadata,
         });
     }
+    roomServiceClient
+        .listParticipants(room.id)
+        .then(ps =>
+            ps.forEach(p =>
+                roomServiceClient.updateParticipant(
+                    room.id,
+                    p.identity,
+                    p.metadata,
+                    createGrant(room, {id: p.identity}))));
 }
 
 export const createAccessToken = (room: JamRoom, info: IdentityInfo) => {
@@ -43,14 +62,7 @@ export const createAccessToken = (room: JamRoom, info: IdentityInfo) => {
         name: info.name,
         metadata: JSON.stringify({info, state: {handRaised: false}}) ,
     });
-    at.addGrant({
-        roomJoin: hasAccessToRoom(room, info), room: room.id,
-        roomAdmin: isModerator(room, info),
-        canSubscribe: true,
-        canPublishData: true,
-        canPublishSources: publishableSources(room, info),
-        canUpdateOwnMetadata: true,
-    });
+    at.addGrant(createGrant(room, info));
     return at.toJwt();
 }
 
