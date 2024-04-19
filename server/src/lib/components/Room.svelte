@@ -130,7 +130,7 @@
               {#each stageParticipants as participant (participant.identity)}
                   <StageAvatar
                     participant={participant}
-                    onClick={$me.roles.moderator ? () => showRoleActions.set(myInfo.id) : undefined}
+                    onClick={$me.roles.moderator ? () => showRoleActions.set(participant.identity) : undefined}
                   />
               {/each}
             </ol>

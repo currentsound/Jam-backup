@@ -49,6 +49,7 @@ export const createAccessToken = (room: JamRoom, info: IdentityInfo) => {
         canSubscribe: true,
         canPublishData: true,
         canPublishSources: publishableSources(room, info),
+        canUpdateOwnMetadata: true,
     });
     return at.toJwt();
 }

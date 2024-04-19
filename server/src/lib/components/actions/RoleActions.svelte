@@ -11,7 +11,7 @@
   const {showRoleActions} = getActionsContext();
   const onCancel = () => showRoleActions.set(undefined) ;
 
-  const {state: {jamRoom, me, roomId}, api: roomApi} = getRoomContext();
+  const {state: {jamRoom, me}, api: roomApi} = getRoomContext();
   let {speakers, stageOnly, moderators} = $jamRoom || {};
   let {removeSpeaker, addSpeaker, removeModerator, addModerator} = $roomApi;
 

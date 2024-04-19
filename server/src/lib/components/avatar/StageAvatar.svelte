@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {getWidth, mqp} from '$lib/client/stores/styles';
+  import {mqp} from '$lib/client/stores/styles';
   import {displayName, avatarUrl} from "$lib/client/utils/avatar";
   import {
     getParticipantContext,
@@ -29,6 +29,7 @@
   let info: IdentityInfo;
   let isSpeaking: boolean;
   let moderator: boolean;
+  let name: string;
 
 
   $: {
@@ -37,11 +38,12 @@
     info = $participantContext.info;
     isSpeaking = $participantContext.isSpeaking;
     moderator = $participantContext.roles.moderator;
+    name = displayName($participantContext.info, $jamRoom);
   }
 
 </script>
       <li
-        title={displayName(info, $jamRoom)}
+        title={name}
         class="relative items-center space-y-1 mt-4 ml-2 mr-2"
         style={onClick ? "cursor: pointer" : undefined}
       >
@@ -70,7 +72,7 @@
                 class={mqp(
                   'human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'
                 )}
-                alt={displayName(info, $jamRoom)}
+                alt={name}
                 src={avatarUrl(info, $jamRoom)}
 
               />
@@ -127,7 +129,7 @@
                     <path d="M894.5,633.4L663.3,500l231.1-133.4c39.1-22.6,52.4-72.5,29.9-111.6c-22.6-39.1-72.5-52.4-111.6-29.9L581.7,358.5V91.7c0-45.1-36.6-81.7-81.7-81.7c-45.1,0-81.7,36.6-81.7,81.7v266.9L187.2,225.1c-39.1-22.6-89-9.2-111.6,29.9c-22.6,39.1-9.2,89,29.9,111.6L336.7,500L105.5,633.4C66.5,656,53.1,705.9,75.6,745c22.6,39.1,72.5,52.4,111.6,29.9l231.1-133.4v266.9c0,45.1,36.6,81.7,81.7,81.7c45.1,0,81.7-36.6,81.7-81.7V641.5l231.1,133.4c39.1,22.6,89,9.2,111.6-29.9C946.9,705.9,933.5,656,894.5,633.4z" />
                   </svg>
                 </span>{' '}
-                {displayName(info, $jamRoom).substring(0, 12)}
+                {name.substring(0, 12)}
               </span>
               <TwitterHandle
                 info={info}

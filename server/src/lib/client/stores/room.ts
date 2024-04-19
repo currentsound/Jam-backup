@@ -114,9 +114,11 @@ export const getParticipantContext = (participant: Participant, jamRoomStore: Re
         participant.on(e, listener);
     }
     return () => {
-        for(const e of Object.values(ParticipantEvent)) {
-            // @ts-ignore
-            participant.removeListener(e, listener);
+        if(listener) {
+            for (const e of Object.values(ParticipantEvent)) {
+                // @ts-ignore
+                participant.removeListener(e, listener);
+            }
         }
     }
 })
@@ -154,8 +156,6 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
         toJamRoom,
         jamRoom
         );
-
-    livekitRoomStore.subscribe(console.log);
 
     const reactions = getReactions(livekitRoom);
 
