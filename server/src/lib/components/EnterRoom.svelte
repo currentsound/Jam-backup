@@ -17,36 +17,16 @@ const forbidden = false;
   const roomColors = $colors;
   const otherDevice = false;
 
-// {#if !iMayEnter}
-// <EnterRoom roomId={roomId} name={name} forbidden={true} />
-//
-// {:else if !iModerate && closed}
-// <EnterRoom
-//         roomId={roomId}
-// name={name}
-// description={description}
-// schedule={schedule}
-// logoURI={logoURI}
-// closed={closed}
-// buttonURI={buttonURI}
-// buttonText={buttonText}
-// />
-//
-// {:else if !hasEnteredRoom}
-// <EnterRoom
-//         roomId={roomId}
-// name={name}
-// description={description}
-// schedule={schedule}
-// logoURI={logoURI}
-// />
 
 let schedule = room?.schedule
-
+let fetchingToken = false;
 
 
 </script>
     <Container>
+      {#if fetchingToken}
+        Connecting ...
+        {:else}
       <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
         <RoomHeader/>
         <p class="hidden pt-4 pb-4">
@@ -79,6 +59,7 @@ let schedule = room?.schedule
         <button
           on:click={() => {
             userInteracted.set(true);
+            fetchingToken = true;
             $api.enterRoom();
           }}
           class={
@@ -122,6 +103,7 @@ let schedule = room?.schedule
           🗓 Add this to my calendar
         </button>
       </div>
+      {/if}
     </Container>
   );
 }

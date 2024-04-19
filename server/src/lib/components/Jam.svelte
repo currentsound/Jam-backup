@@ -21,8 +21,6 @@
 
     const {state: {roomId, jamRoom, livekitRoom, me}} = getRoomContext();
 
-
-
 </script>
 
 <div
