@@ -10,4 +10,6 @@
     <div
       class={mergeClasses('spaced-w-2', className)}
       style={toStyleString({lineHeight: '56px', ...style})}
-    />
+    >
+        <slot />
+    </div>

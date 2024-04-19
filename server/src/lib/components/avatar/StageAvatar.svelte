@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {mqp} from '$lib/client/stores/styles';
+  import {getWidth, mqp} from '$lib/client/stores/styles';
   import {displayName, avatarUrl} from "$lib/client/utils/avatar";
   import {
     getParticipantContext,
@@ -15,7 +15,7 @@
   import type {IdentityInfo} from "$lib/types";
 
   export let participant: Participant;
-  export let onClick;
+  export let onClick: (() => void) | undefined = undefined;
   export let canSpeak: boolean = true;
 
 
@@ -45,6 +45,7 @@
         class="relative items-center space-y-1 mt-4 ml-2 mr-2"
         style={onClick ? "cursor: pointer" : undefined}
       >
+        <button on:click={onClick}>
         <div
           class="human-radius p-1"
           style="background-color: {$colors.background}"
@@ -60,7 +61,7 @@
                   'human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'
                 )}
                 stream={video}
-                onClick={onClick}
+                on:click={onClick}
                 mirror={mirror}
               />
 
@@ -71,16 +72,13 @@
                 )}
                 alt={displayName(info, $jamRoom)}
                 src={avatarUrl(info, $jamRoom)}
-                on:click={onClick}
+
               />
 
             {/if}
             <Reactions
               participantId={participant.identity}
-              className={mqp(
-                'absolute text-5xl md:text-7xl pt-4 md:pt-5 human-radius w-20 h-20 md:w-28 md:h-28 border text-center'
-              )}
-              style="background-color: {$colors.buttonPrimary}"
+              className={'text-5xl md:text-7xl pt-4 md:pt-5 w-20 h-20 md:w-28 md:h-28'}
             />
           </div>
         </div>
@@ -139,4 +137,5 @@
             </div>
           </div>
         </div>
+        </button>
       </li>

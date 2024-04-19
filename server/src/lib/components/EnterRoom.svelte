@@ -47,7 +47,6 @@ let schedule = room?.schedule
 
 </script>
     <Container>
-      <code>{JSON.stringify(room)}</code>
       <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
         <RoomHeader/>
         <p class="hidden pt-4 pb-4">

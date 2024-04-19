@@ -114,19 +114,22 @@ function addTwitter(identities: VerifiableIdentity[], handle: string | undefined
             />
           </svg>
           <span>
-            <span
-              class={tweet ? 'hidden' : 'underline'}
-              style="cursor: pointer"
-              on:click={() => showTwitterVerify = !showTwitterVerify}
-            >
-              verify
-            </span>
-            <span
-              class={tweet ? '' : 'hidden'}
-              on:click={() => showTwitterVerify = !showTwitterVerify}
-            >
-              verified
-            </span>
+            <button on:click={() => showTwitterVerify = !showTwitterVerify}>
+              <span
+                class={tweet ? 'hidden' : 'underline'}
+                style="cursor: pointer"
+
+              >
+                verify
+              </span>
+            </button>
+            <button on:click={() => showTwitterVerify = !showTwitterVerify}>
+              <span
+                class={tweet ? '' : 'hidden'}
+              >
+                verified
+              </span>
+            </button>
           </span>
         </span>
 

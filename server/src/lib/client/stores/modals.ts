@@ -12,7 +12,7 @@ export const openModal = <T extends SvelteComponent<{close: () => void}>>(
     id: string = uuidv7(),
     onClose: () => void = () => undefined
 ) => {
-    const modal = {
+    const modal: Modal = {
         id,
         componentType,
         props: {...props, close: () => {

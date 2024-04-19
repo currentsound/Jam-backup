@@ -10,9 +10,15 @@ import {openModal} from "$lib/client/stores/modals";
   const onCancel = () => showActions.set(false);
 
   const {state: {livekitRoom, jamRoom, me}, api} = getRoomContext();
-
-  let {iSpeak, iModerate, context: {id}} = $me;
   let stageOnly = !!$jamRoom?.stageOnly;
+
+  let iModerate: boolean;
+  let iSpeak: boolean;
+
+  $: {
+    iModerate = $me.roles.moderator;
+    iSpeak = $me.roles.speaker;
+  }
 
   let {addSpeaker, removeSpeaker, leaveStage, startRecording, stopRecording, downloadRecording} = $api;
 
@@ -21,9 +27,9 @@ import {openModal} from "$lib/client/stores/modals";
       <h3 class="font-medium">Actions</h3>
       <br />
       <ButtonContainer>
-        {#if $jamRoom?.access?.identitiesLocked }
+        {#if !$jamRoom?.access?.identitiesLocked }
           <SecondaryButton
-            on:click={() => {
+            onClick={() => {
               openModal(EditIdentity, {});
               onCancel();
             }}
@@ -33,14 +39,14 @@ import {openModal} from "$lib/client/stores/modals";
         {/if}
         {#if !stageOnly && iModerate && !iSpeak }
           <SecondaryButton
-            onClick={() => addSpeaker(id).then(onCancel)}
+            onClick={() => addSpeaker($me.id).then(onCancel)}
           >
             ↑ Move to Stage
           </SecondaryButton>
         {/if}
         {#if !stageOnly && iModerate && iSpeak }
           <SecondaryButton
-            onClick={() => removeSpeaker(id).then(onCancel)}
+            onClick={() => removeSpeaker($me.id).then(onCancel)}
           >
             ↓ Leave Stage
           </SecondaryButton>

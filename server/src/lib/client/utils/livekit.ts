@@ -31,7 +31,7 @@ export const getMetadata = (participant: Participant) => pof<ParticipantMetadata
     participantMetadataSchema,
     JSON.parse(participant.metadata || '{}'),
     {
-        info: {id: participant.identity},
+        info: {id: participant.identity, name: 'XXX'},
         state: {
             handRaised: false,
         }

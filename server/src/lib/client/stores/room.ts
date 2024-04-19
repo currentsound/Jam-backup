@@ -1,15 +1,12 @@
 import {Participant, ParticipantEvent, RemoteParticipant, Room, RoomEvent, Track} from "livekit-client";
-import {derived, type Readable, readable, type Stores, type Updater, writable} from "svelte/store";
+import {derived, type Readable, readable, readonly, type Stores, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
     type ActionsContext,
-    type IdentityInfo,
     type JamMessage,
     type JamReaction,
     type JamRoom,
     type ParticipantContext,
-    participantMetadataSchema,
-    type ParticipantState,
     type RoomContext,
     type StaticConfig
 } from "$lib/types";
@@ -19,9 +16,6 @@ import {identitiesStore} from "$lib/client/stores/identity";
 import {colors} from "$lib/client/utils/theme";
 
 const defaultListenedRoomEvents: RoomEvent[] = Object.values(RoomEvent);
-
-
-
 
 type RoomTransformer = (room: Room) => unknown;
 
@@ -35,119 +29,38 @@ const roomListener = <T = Room>(room: Room, events: RoomEvent[] = defaultListene
     })
 
 
-const defaultListenedParticipantEvents: ParticipantEvent[] = [
-    ParticipantEvent.ParticipantMetadataChanged,
-    ParticipantEvent.ParticipantPermissionsChanged,
-    ParticipantEvent.TrackSubscribed,
-    ParticipantEvent.TrackUnsubscribed,
-    ParticipantEvent.DataReceived
-];
-
-
-type ParticipantTransformer = (participant: Participant) => unknown;
-
-const participantListener = <T = Participant>(participant: Participant, events: ParticipantEvent[] = defaultListenedParticipantEvents, transform: ParticipantTransformer = (participant) => participant) => {
-
-    return readable<T>(transform(participant) as T, (set) => {
-        const updater = () => set(transform(participant) as T);
-
-        for (const event of events) {
-            // @ts-expect-error Typing Error in livekit client api
-            participant.on(event, updater);
-        }
-    })
-}
-
-const participantEventListener = <T>(
-    participant: Participant,
-    initialState: T,
-    event: ParticipantEvent,
-    handler: (set: ((value: T) => void), update: ((fn: Updater<T>) => void), ...eventArgs: unknown[]) => void) =>
+export const addReaction = (id: string | undefined, reaction: JamReaction, update: (fn: Updater<Record<string, JamReaction[]>>) => void) =>
 {
+    if(!id) {
+        return;
+    }
+    update(reactions => {
+        const oldList = reactions[id] || [];
+        const newList = [reaction, ...oldList];
+        return {...reactions, [id]: newList};
+    });
+    setTimeout(
+        () => update(
+            reactions => ({...reactions, [id]: reactions[id].filter(
+                        r => r.id !== reaction.id)}
+            )),
+        5000
+    )
 
-    return readable<T>(initialState, (set, update) => {
-        if(participant) {
-            // @ts-expect-error Typing Error in livekit client api
-            participant.on(event, (...args) => handler(set, update, args));
-        }
-    })
 }
 
-
-
-const participantStreamsEvents = [
-    ParticipantEvent.TrackUnsubscribed,
-    ParticipantEvent.TrackSubscribed,
-    ParticipantEvent.TrackPublished,
-    ParticipantEvent.TrackUnpublished
-]
-
-const getParticipantTracks = (participant: Participant) => participantListener<Track[]>(participant, participantStreamsEvents, (participant): Track<Track.Kind>[] =>
-    participant ? [...participant.trackPublications.values()].map((tp) => tp.track).filter(Boolean) as Track<Track.Kind>[] : []);
-
-
-const participantSpeakingEvents = [ParticipantEvent.IsSpeakingChanged];
-
-export const getIsParticipantSpeaking = (participant: Participant) => participantListener<boolean>(participant, participantSpeakingEvents,
-    (participant) => !!participant?.isSpeaking);
-
-
-export const getCameraTrack = (tracks: Track[]) => tracks.filter(
-    (t) => t.kind === Track.Kind.Video && t.source === Track.Source.Camera,
-)[0];
-
-export const getParticipantReactions = (participant: Participant) => participantEventListener<JamReaction[]>(
-    participant, [], ParticipantEvent.DataReceived, (_, update, ...args) => {
-        const [data]  = args as [Uint8Array, [...unknown[]]];
-        const receivedData = JSON.parse(new TextDecoder().decode(data)) as JamMessage;
-        if(receivedData.type === 'reaction') {
-            update(reactions => [receivedData, ...reactions]);
-            setTimeout(
-                () => update(
-                    reactions => reactions.filter(
-                        r => r.id !== receivedData.id)
-                ),
-                5000
-            )
-        }
-    })
-
-export const getReactions = (room: Room) =>
-    readable<Record<string, JamReaction[]>>({}, (set, update) => {
-        room.on(RoomEvent.DataReceived, (payload, participant, kind) => {
+const getReactions = (room: Room) =>
+    writable<Record<string, JamReaction[]>>({}, (_, update) => {
+        room.on(RoomEvent.DataReceived, (payload, participant) => {
             const receivedData = JSON.parse(new TextDecoder().decode(payload)) as JamMessage;
             if(receivedData.type === 'reaction') {
-                const id = participant?.identity;
-                if(!id) {
-                    return;
-                }
-                update(reactions => {
-                    const oldList = reactions[participant.identity] || [];
-                    const newList = [receivedData, ...oldList];
-                    return {...reactions, [id]: newList};
-                });
-                setTimeout(
-                    () => update(
-                        reactions => ({...reactions, [id]: reactions[id].filter(
-                            r => r.id !== receivedData.id)}
-                    )),
-                    5000
-                )
+                addReaction(participant?.identity, receivedData, update);
             }
         })
     });
 
 
 
-export const getParticipantState = (participant: Participant) => participantListener<ParticipantState>(participant, [ParticipantEvent.ParticipantMetadataChanged], (participant) => {
-        const parseResult = participantMetadataSchema.safeParse(JSON.parse(participant.metadata || '{}'));
-        if(parseResult.success) {
-            return parseResult.data.state;
-        } else {
-            return {id: participant};
-        }
-    }
-)
 
 export const userInteracted = writable<boolean>(false);
 
@@ -203,10 +116,26 @@ export const getParticipantContext = (participant: Participant, jamRoomStore: Re
     return () => {
         for(const e of Object.values(ParticipantEvent)) {
             // @ts-ignore
-            participant.removeListener(listener);
+            participant.removeListener(e, listener);
         }
     }
 })
+
+export const getParticipants = (room: Room) => {
+    return readable<RemoteParticipant[]>(
+        [...room.remoteParticipants.values()],
+        (set) => {
+            const listener = () =>
+                set([...room.remoteParticipants.values()]);
+            room.on(RoomEvent.ParticipantConnected, listener);
+            room.on(RoomEvent.ParticipantDisconnected, listener);
+            return () => {
+                room.removeListener(RoomEvent.ParticipantConnected, listener);
+                room.removeListener(RoomEvent.ParticipantDisconnected, listener);
+            };
+        },
+    );
+};
 
 
 
@@ -233,7 +162,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     const api = derived(
         [livekitRoomStore, identitiesStore, jamRoomStore],
         ([$room, $identities, $jamRoom]) =>
-            createRoomApi(roomId, $room, $identities, $jamRoom, jamConfig));
+            createRoomApi(roomId, $room, $identities, $jamRoom, reactions));
 
 
     const me = derived(
@@ -251,13 +180,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
             jamRoom: jamRoomStore,
             colors: derived(jamRoomStore, ($jamRoom) => colors($jamRoom)),
             me,
-            participants: derived(
-                [livekitRoomStore, jamRoomStore],
-                ([$livekitRoom, $jamRoom]) =>
-                    [
-                        ...(Object.values($livekitRoom.remoteParticipants) as RemoteParticipant[])
-                    ]),
-            reactions,
+            reactions: readonly(reactions),
         },
         api,
 

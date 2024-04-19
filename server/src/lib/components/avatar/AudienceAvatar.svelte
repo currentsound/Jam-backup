@@ -46,9 +46,7 @@
         />
         <Reactions
                 participantId={participant.identity}
-                className={mqp(
-    'absolute bg-white text-4xl md:text-6xl pt-3 md:pt-4 human-radius w-16 h-16 md:w-24 md:h-24 border text-center'
-    )}
+                className={'text-4xl md:text-6xl pt-3 md:pt-4 w-16 h-16 md:w-24 md:h-24'}
         />
         <div class={handRaised ? '' : 'hidden'}>
             <div

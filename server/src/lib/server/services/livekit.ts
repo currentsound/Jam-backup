@@ -37,18 +37,18 @@ export const createOrUpdateRoom = async (room: JamRoom) => {
     }
 }
 
-export const createAccessToken = (room: JamRoom, identity: IdentityInfo) => {
+export const createAccessToken = (room: JamRoom, info: IdentityInfo) => {
     const at = new AccessToken(livekitKey, livekitSecret, {
-        identity: identity.id,
-        name: identity.name,
-        metadata: JSON.stringify(identity),
+        identity: info.id,
+        name: info.name,
+        metadata: JSON.stringify({info, state: {handRaised: false}}) ,
     });
     at.addGrant({
-        roomJoin: hasAccessToRoom(room, identity), room: room.id,
-        roomAdmin: isModerator(room, identity),
+        roomJoin: hasAccessToRoom(room, info), room: room.id,
+        roomAdmin: isModerator(room, info),
         canSubscribe: true,
         canPublishData: true,
-        canPublishSources: publishableSources(room, identity),
+        canPublishSources: publishableSources(room, info),
     });
     return at.toJwt();
 }

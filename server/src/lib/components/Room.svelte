@@ -8,8 +8,10 @@
   import {usePushToTalk, useCtrlCombos} from '$lib/client/utils/hotkeys';
   import {mqp} from "$lib/client/stores/styles";
   import {useWakeLock} from "$lib/client/utils/use-wake-lock";
-  import {getRoomContext, initializeActionsContext} from "$lib/client/stores/room";
+  import {getRoomContext, initializeActionsContext, getParticipants} from "$lib/client/stores/room";
   import {dynamicConfig} from "$lib/client/stores/location";
+  import type {Participant} from "livekit-client";
+  import type {IdentityInfo} from "$lib/types";
 
 
   const inWebView =
@@ -19,27 +21,35 @@
         userAgent.browser?.name !== 'Mobile Safari'));
 
 
-  const {state: {livekitRoom, jamRoom, me, participants, colors}} = getRoomContext();
+  const {state: {livekitRoom, jamRoom, me, colors}} = getRoomContext();
 
   useWakeLock();
   usePushToTalk();
   useCtrlCombos();
 
 
-  let myInfo = $me.info;
+  let myInfo: IdentityInfo;
 
-  let {
-    speakers,
-    closed,
-    stageOnly,
-  } = $jamRoom || {};
+  let speakers: string[];
+  let closed: boolean;
+  let stageOnly: boolean;
 
+  let allParticipants = getParticipants($livekitRoom);
+  let stageParticipants: Participant[];
+  let audienceParticipants: Participant[];
 
+  $: {
+    myInfo = $me.info;
 
-  let stageParticipants = stageOnly ? $participants : $participants.filter(p => speakers?.includes(p.identity))
-  let audienceParticipants = stageOnly
-     ? []
-     : $participants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
+    speakers = $jamRoom?.speakers || [];
+    closed = !!$jamRoom?.closed;
+    stageOnly = !!$jamRoom?.stageOnly;
+
+    stageParticipants = stageOnly ? $allParticipants : $allParticipants.filter(p => speakers?.includes(p.identity))
+    audienceParticipants = stageOnly
+            ? []
+            : $allParticipants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
+  }
 
   const {showActions, showRoleActions} = initializeActionsContext();
 
@@ -108,8 +118,7 @@
           Room is closed
         </div>
         <RoomHeader/>
-        <div class="">
-          <div class="">
+        <div>
             <ol class="flex flex-wrap">
               {#if $me.roles.speaker}
                 <StageAvatar
@@ -125,7 +134,6 @@
                   />
               {/each}
             </ol>
-          </div>
 
           <br />
           {#if !$jamRoom?.stageOnly}
@@ -133,7 +141,7 @@
                 Audience
               </h3>
               <ol class="flex flex-wrap">
-                {#if !$me }
+                {#if !$me.roles.speaker }
                   <AudienceAvatar
                       participant={$me.participant}
                       onClick={() => showActions.set(true)}

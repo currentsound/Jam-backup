@@ -283,7 +283,6 @@ export interface RoomContext {
         jamRoom: Readable<JamRoom | undefined>,
         colors: Readable<CompletedJamRoomColors>,
         me: Readable<Me>,
-        participants: Readable<Participant[]>,
         reactions: Readable<Record<string, JamReaction[]>>
     },
     api: Readable<RoomAPI>,

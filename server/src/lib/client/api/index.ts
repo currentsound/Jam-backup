@@ -2,7 +2,7 @@ import {
     type DynamicConfig,
     type Identities,
     type IdentityInfo,
-    type JamAccess,
+    type JamAccess, type JamReaction,
     type JamRoom, type ParticipantMetadata, participantMetadataSchema, type ParticipantState,
     type RoomAPI, type ServerAPI,
     type StaticConfig
@@ -16,10 +16,12 @@ import {uuidv7} from "uuidv7";
 import {switchToNextCamera} from "$lib/client/utils/media";
 import {addAdmin, isAdmin, removeAdmin} from "$lib/client/utils/admin";
 import {pof} from "$lib/utils";
+import type {Writable} from "svelte/store";
+import {addReaction} from "$lib/client/stores/room";
 
 
 
-export const createRoomApi = (roomId: string, room: Room, identities: Identities, jamRoom: JamRoom | undefined, jamConfig: StaticConfig): RoomAPI => {
+export const createRoomApi = (roomId: string, room: Room, identities: Identities, jamRoom: JamRoom | undefined, reactions: Writable<Record<string, JamReaction[]>>): RoomAPI => {
 
     const identity = identities[roomId] ?? identities._default;
 
@@ -48,6 +50,7 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         removeModerator: (participantId: string) => updateRoom((room) => ({...room, moderators: room.moderators.filter(id => id != participantId)})),
         removePresenter: (participantId: string) => updateRoom((room) => ({...room, presenters: room.presenters.filter(id => id != participantId)})),
         updateInfo: (info: IdentityInfo) => {
+            console.log(info);
             identity.info = info;
             setMetadata({...getMetadata(), info})
             return updateIdentity(roomId, identity);
@@ -68,7 +71,11 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
             }),
         leaveRoom: () => room.disconnect(),
         leaveStage: () => backend.deleteRequest(identity, `/rooms/${roomId}/speakers/${identity.publicKey}`),
-        sendReaction: (reaction: string) => sendJamMessage(room, {id: uuidv7(), type: 'reaction', reaction}),
+        sendReaction: (reaction: string) => {
+            const reactionObject: JamReaction = {id: uuidv7(), type: 'reaction', reaction};
+            addReaction(identity.publicKey, reactionObject, reactions.update);
+            return sendJamMessage(room, reactionObject);
+        },
         autoJoinOnce: () => {},
         switchCamera: () => switchToNextCamera(room),
         setCameraOn: (cameraOn: boolean) => room.localParticipant.setCameraEnabled(cameraOn),

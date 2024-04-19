@@ -14,4 +14,4 @@ export const Error = {
     404: notFound()
 };
 
-export default new Endpoint({Param, Input, Output, Error }).handle(identityHandler.post);
+export default new Endpoint({Param, Input, Output, Error }).handle(identityHandler.put);

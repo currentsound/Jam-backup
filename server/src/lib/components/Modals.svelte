@@ -6,5 +6,5 @@
 
 
 {#each $modals as modal}
-    <svelte:component this={modal.componentType} ...modal.props></svelte:component>
+    <svelte:component this={modal.componentType} {...modal.props}></svelte:component>
 {/each}

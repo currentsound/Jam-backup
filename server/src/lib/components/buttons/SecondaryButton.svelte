@@ -1,8 +1,9 @@
-<script lang="ts">
+<script lang="ts" xmlns="http://www.w3.org/1999/html">
     import {mergeClasses} from "$lib/client/utils/util";
 
     export let className: string = '';
     export let light: boolean = false;
+    export let onClick: () => void;
 
     let bgColor = light ? 'bg-gray-100' : 'bg-gray-200';
 
@@ -13,4 +14,6 @@
     );
 </script>
 
-<button class={mergedClassName} {...$$restProps || {}} />
+<button class={mergedClassName} on:click={onClick} {...$$restProps || {}} >
+    <slot/>
+</button>
