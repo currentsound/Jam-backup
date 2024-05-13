@@ -24,19 +24,27 @@ let identityCount = async () =>
     Object.keys(localStore).filter(key => key.startsWith('identities/')).length;
 
 if(!local) {
-  const client = createClient({url: `redis://${redisHost}`}).connect();
-  client.then(c => c.on('error', async (err) => {
-    console.log('error connecting to redis, host redis');
-    console.error(err);
-    await c.quit();
-  }));
 
-  roomCount = async () => (await client.then(c => c.keys('rooms/*'))).length;
-  identityCount = async () => (await client.then(c => c.keys('identities/*'))).length;
-  set = async (key: string, value: unknown) => {await client.then(c => c.set(key, JSON.stringify(value)))};
-  get = async (key: string) => client.then(c => c.get(key).then(v => v && JSON.parse(v)));
-  del = (key: string) => client.then(c => c.del(key).then(() => undefined));
-  list = (prefix: string) => client.then(c => c.keys(`${prefix}*`));
+  let client: Promise<ReturnType<typeof createClient>>;
+
+  const getClient = () => {
+    if(!client) {
+      client = createClient({url: `redis://${redisHost}`}).connect();
+      client.then(c => c.on('error', async (err: Error) => {
+        console.log('error connecting to redis, host redis');
+        console.error(err);
+        await c.quit();
+      }));
+    }
+    return client;
+  }
+
+  roomCount = async () => (await getClient().then(c => c.keys('rooms/*'))).length;
+  identityCount = async () => (await getClient().then(c => c.keys('identities/*'))).length;
+  set = async (key: string, value: unknown) => {await getClient().then(c => c.set(key, JSON.stringify(value)))};
+  get = async (key: string) => getClient().then(c => c.get(key).then(v => v && JSON.parse(v)));
+  del = (key: string) => getClient().then(c => c.del(key).then(() => undefined));
+  list = (prefix: string) => getClient().then(c => c.keys(`${prefix}*`));
 }
 
 export {
