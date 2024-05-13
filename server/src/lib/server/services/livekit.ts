@@ -2,9 +2,9 @@ import {AccessToken, type ParticipantInfo, RoomServiceClient, TrackSource} from 
 import {livekitKey, livekitSecret, livekitUrl} from "$lib/server/config";
 import type {IdentityInfo, JamRoom} from "$lib/types";
 import {hasAccessToRoom, isModerator} from "../authz";
-import {roomAccessor} from "$lib/server/handlers/room";
 import {asyncFilter} from "$lib/utils";
 import {identityAccessor} from "$lib/server/handlers/identity";
+import {accessor} from "$lib/server/handlers/helpers";
 
 export const roomServiceClient = new RoomServiceClient(livekitUrl, livekitKey, livekitSecret);
 
@@ -92,7 +92,7 @@ export const createAccessToken = (room: JamRoom, info: IdentityInfo) => {
 
 export const activeUserCount = () =>
     roomServiceClient.listRooms()
-        .then(rooms => asyncFilter(rooms, async room => Boolean(await roomAccessor.get(room.name))))
+        .then(rooms => asyncFilter(rooms, async room => Boolean(await accessor<JamRoom>({prefix: 'rooms'}).get(room.name))))
         .then(rooms => Promise.all(rooms.map(room => roomServiceClient.listParticipants(room.name).then(participants => participants.map(p => p.identity)))))
         .then(roomParticipants => roomParticipants.flat())
         .then(participantIds => Promise.all(participantIds.map(id => identityAccessor.get(id))))

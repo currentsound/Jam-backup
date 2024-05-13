@@ -1,7 +1,7 @@
 import {accessor, controller} from "$lib/server/handlers/helpers";
 import {type JamRoom, jamRoomSchema, type Success} from "$lib/types";
 import {roomAuthorizer} from "../authz";
-import {createOrUpdateRoom, roomServiceClient} from "$lib/server/services/livekit";
+import {createOrUpdateRoom} from "$lib/server/services/livekit";
 import {forbidden, notFound} from "$lib/server/errors";
 import type {RequestEvent} from "@sveltejs/kit";
 
