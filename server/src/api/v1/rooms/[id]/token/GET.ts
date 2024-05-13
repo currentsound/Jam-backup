@@ -3,7 +3,7 @@ import {jamAccessSchema} from '$lib/types';
 import {forbidden, notFound} from "$lib/server/errors";
 import {roomAccessor} from "$lib/server/handlers/room";
 import {livekitUrl} from "$lib/server/config";
-import {createAccessToken, createOrUpdateRoom, roomServiceClient} from "$lib/server/services/livekit";
+import {createAccessToken, createOrUpdateRoom} from "$lib/server/services/livekit";
 
 export const Output = jamAccessSchema;
 export const Param = z.object({
@@ -25,6 +25,7 @@ export default new Endpoint({Param, Output, Error }).handle(async (input, event)
     }
 
     if(!event.locals.identity) {
+        console.log(event);
         throw forbidden();
     }
 
