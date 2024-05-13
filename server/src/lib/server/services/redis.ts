@@ -1,5 +1,5 @@
 import {createClient} from 'redis';
-import {local} from '../config.js';
+import {local, redisHost} from '../config.js';
 import {readFileSync} from "fs";
 import {existsSync, writeFileSync} from "node:fs";
 
@@ -24,19 +24,19 @@ let identityCount = async () =>
     Object.keys(localStore).filter(key => key.startsWith('identities/')).length;
 
 if(!local) {
-  const client = createClient({url: 'redis://redis'});
-  client.on('error', async (err) => {
+  const client = createClient({url: `redis://${redisHost}`}).connect();
+  client.then(c => c.on('error', async (err) => {
     console.log('error connecting to redis, host redis');
     console.error(err);
-    await client.quit();
-  });
+    await c.quit();
+  }));
 
-  roomCount = async () => (await client.keys('rooms/*')).length;
-  identityCount = async () => (await client.keys('identities/*')).length;
-  set = async (key: string, value: unknown) => {await client.set(key, JSON.stringify(value))};
-  get = async (key: string) => client.get(key).then(v => v && JSON.parse(v));
-  del = (key: string) => client.del(key).then(() => undefined);
-  list = (prefix: string) => client.keys(`${prefix}*`);
+  roomCount = async () => (await client.then(c => c.keys('rooms/*'))).length;
+  identityCount = async () => (await client.then(c => c.keys('identities/*'))).length;
+  set = async (key: string, value: unknown) => {await client.then(c => c.set(key, JSON.stringify(value)))};
+  get = async (key: string) => client.then(c => c.get(key).then(v => v && JSON.parse(v)));
+  del = (key: string) => client.then(c => c.del(key).then(() => undefined));
+  list = (prefix: string) => client.then(c => c.keys(`${prefix}*`));
 }
 
 export {

@@ -4,6 +4,7 @@ config();
 
 export const jamHost = process.env.JAM_HOST || 'beta.jam.systems';
 export const local = process.env.LOCAL;
+export const redisHost = process.env.REDIS_HOST || 'redis';
 export const restrictRoomCreation = !!process.env.JAM_RESTRICT_ROOM_CREATION;
 export const serverAdminId = process.env.JAM_SERVER_ADMIN_ID;
 export const recordFileLocationPath =

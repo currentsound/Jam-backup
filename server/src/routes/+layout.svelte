@@ -8,7 +8,7 @@
 
     initializeServerContext(data.jamConfig);
 
-    //onMount(initializeLocationStore)
+    onMount(initializeLocationStore)
 
 </script>
 <slot/>
