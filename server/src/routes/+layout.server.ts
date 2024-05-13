@@ -13,10 +13,10 @@ const defaultRoomOptions: Partial<RoomOptions> = {
     }
 }
 
-export const load = async (event: RequestEvent): Promise<{jamConfig: StaticConfig}> => ({
+export const load = async (): Promise<{jamConfig: StaticConfig}> => ({
     jamConfig: {
         defaultRoom: {
-            name: "JamRoom",
+            name: "",
             speakers: [],
             moderators: [],
             presenters: []

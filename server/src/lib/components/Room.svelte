@@ -8,10 +8,9 @@
   import {usePushToTalk, useCtrlCombos} from '$lib/client/utils/hotkeys';
   import {mqp} from "$lib/client/stores/styles";
   import {useWakeLock} from "$lib/client/utils/use-wake-lock";
-  import {getRoomContext, initializeActionsContext, getParticipants} from "$lib/client/stores/room";
+  import {getRoomContext, initializeActionsContext} from "$lib/client/stores/room";
   import {dynamicConfig} from "$lib/client/stores/location";
-  import type {Participant} from "livekit-client";
-  import type {IdentityInfo} from "$lib/types";
+  import type {LocalParticipant, Participant} from "livekit-client";
 
 
   const inWebView =
@@ -21,41 +20,52 @@
         userAgent.browser?.name !== 'Mobile Safari'));
 
 
-  const {state: {livekitRoom, jamRoom, me, colors}} = getRoomContext();
+  const {state: {livekitRoom, jamRoom, colors}} = getRoomContext();
 
   useWakeLock();
   usePushToTalk();
   useCtrlCombos();
 
 
-  let myInfo: IdentityInfo;
 
   let speakers: string[];
+  let moderators: string[];
+  let iModerate: boolean;
+  let iSpeak: boolean;
+
   let closed: boolean;
   let stageOnly: boolean;
 
-  let allParticipants = getParticipants($livekitRoom);
+  let localParticipant: LocalParticipant;
+
+  let allParticipants = [...$livekitRoom.remoteParticipants.values()];
   let stageParticipants: Participant[];
   let audienceParticipants: Participant[];
 
   $: {
-    myInfo = $me.info;
+    allParticipants = [...$livekitRoom.remoteParticipants.values()];
+    localParticipant = $livekitRoom.localParticipant;
 
     speakers = $jamRoom?.speakers || [];
+    moderators = $jamRoom?.moderators || [];
+
+    iSpeak = speakers.includes(localParticipant.identity);
+    iModerate = moderators.includes(localParticipant.identity);
+
     closed = !!$jamRoom?.closed;
     stageOnly = !!$jamRoom?.stageOnly;
 
-    stageParticipants = stageOnly ? $allParticipants : $allParticipants.filter(p => speakers?.includes(p.identity))
+    stageParticipants = stageOnly ? allParticipants : allParticipants.filter(p => speakers?.includes(p.identity))
     audienceParticipants = stageOnly
             ? []
-            : $allParticipants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
+            : allParticipants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
   }
 
   const {showActions, showRoleActions} = initializeActionsContext();
 
 </script>
 
-    <Container style="display: flex; flexDirection: column">
+    <Container style="display: flex; flex-direction: column">
       <div
         class={mqp('flex flex-col pt-2 md:pt-10 md:p-10')}
         style="flex: 1; overflow-y: auto; min-height: 0"
@@ -120,17 +130,17 @@
         <RoomHeader/>
         <div>
             <ol class="flex flex-wrap">
-              {#if $me.roles.speaker}
+              {#if iSpeak}
                 <StageAvatar
-                  participant={$me.participant}
-                  canSpeak={!$me.hasMicFailed}
+                  participant={localParticipant}
+                  canSpeak={!localParticipant.lastMicrophoneError}
                   onClick={() => showActions.set(true)}
                 />
               {/if}
               {#each stageParticipants as participant (participant.identity)}
                   <StageAvatar
                     participant={participant}
-                    onClick={$me.roles.moderator ? () => showRoleActions.set(participant.identity) : undefined}
+                    onClick={iModerate ? () => showRoleActions.set(participant.identity) : undefined}
                   />
               {/each}
             </ol>
@@ -141,16 +151,16 @@
                 Audience
               </h3>
               <ol class="flex flex-wrap">
-                {#if !$me.roles.speaker }
+                {#if !iSpeak }
                   <AudienceAvatar
-                      participant={$me.participant}
+                      participant={localParticipant}
                       onClick={() => showActions.set(true)}
                   />
                 {/if}
                 {#each audienceParticipants as participant (participant.identity)}
                   <AudienceAvatar
                           participant={participant}
-                    onClick={$me.roles.moderator ? () => showRoleActions.set(participant.identity) : undefined}
+                    onClick={iModerate ? () => showRoleActions.set(participant.identity) : undefined}
                   />
                 {/each}
               </ol>

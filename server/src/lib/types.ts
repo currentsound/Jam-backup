@@ -76,6 +76,7 @@ export const jamRoomSchema = z.object({
     logoURI: z.string().url().optional(),
     buttonURI: z.string().url().optional(),
     buttonText: z.string().url().optional(),
+    shareUrl: z.string().url().optional(),
     access: accessSchema.optional(),
     broadcastRoom: z.boolean().optional(),
     userDisplay: z.object({
@@ -198,7 +199,8 @@ export const staticConfigSchema = z.object({
     livekit: z.object({
         url: z.string().url(),
         roomOptions: roomOptionsSchema.partial()
-    })
+    }),
+    hideJamInfo: z.boolean().optional()
 });
 
 export type StaticConfig = z.infer<typeof staticConfigSchema>;
@@ -272,17 +274,12 @@ export interface ParticipantContext {
     }
 }
 
-export interface Me extends ParticipantContext {
-    hasMicFailed: boolean,
-}
-
 export interface RoomContext {
     state: {
         roomId: string,
         livekitRoom: Readable<ClientRoom>,
         jamRoom: Readable<JamRoom | undefined>,
         colors: Readable<CompletedJamRoomColors>,
-        me: Readable<Me>,
         reactions: Readable<Record<string, JamReaction[]>>
     },
     api: Readable<RoomAPI>,

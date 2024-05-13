@@ -13,4 +13,4 @@
 
 </script>
 
-<Jam style={{height: '100vh'}}/>
+<Jam />

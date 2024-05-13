@@ -11,7 +11,7 @@
   const {showRoleActions} = getActionsContext();
   const onCancel = () => showRoleActions.set(undefined) ;
 
-  const {state: {jamRoom, me}, api: roomApi} = getRoomContext();
+  const {state: {jamRoom, livekitRoom}, api: roomApi} = getRoomContext();
   let {speakers, stageOnly, moderators} = $jamRoom || {};
   let {removeSpeaker, addSpeaker, removeModerator, addModerator} = $roomApi;
 
@@ -19,7 +19,7 @@
   let {isAdmin, addAdmin, removeAdmin} = $serverApi;
 
 
-  const myId = $me.info.id;
+  const myId = $livekitRoom.localParticipant.identity;
 
   let iAmAdmin: boolean | undefined = undefined;
   let participantIsAdmin: boolean | undefined = undefined;

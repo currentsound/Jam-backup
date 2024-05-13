@@ -8,7 +8,13 @@ const permitAllAuthenticator = {
   canGet: (req, res, next) => next(),
 };
 
-const controller = (prefix, authenticator, broadcastRoom, broadcastChannel) => {
+const controller = ({
+  prefix,
+  authenticator,
+  broadcastRoom,
+  broadcastChannel,
+  postCreate,
+}) => {
   const _authenticator = authenticator || permitAllAuthenticator;
 
   const redisKey = req => prefix + '/' + req.params.id;
@@ -22,6 +28,9 @@ const controller = (prefix, authenticator, broadcastRoom, broadcastChannel) => {
     } else {
       await set(key, req.body);
       await set(`activity/${prefix}/last-created`, Date.now());
+      if (postCreate) {
+        postCreate(req.body);
+      }
       res.send(req.body);
     }
   });

@@ -1,4 +1,4 @@
-import {AccessToken, RoomServiceClient, TrackSource} from "livekit-server-sdk";
+import {AccessToken, type ParticipantInfo, RoomServiceClient, TrackSource} from "livekit-server-sdk";
 import {livekitKey, livekitSecret, livekitUrl} from "$lib/server/config";
 import type {IdentityInfo, JamRoom} from "$lib/types";
 import {hasAccessToRoom, isModerator} from "../authz";
@@ -29,14 +29,43 @@ const createGrant = (room: JamRoom, info: IdentityInfo) => ({
     roomAdmin: isModerator(room, info),
     canSubscribe: true,
     canPublishData: true,
+    canPublish: true,
     canPublishSources: publishableSources(room, info),
     canUpdateOwnMetadata: true,
 
 })
 
+const updateGrantIfNecessary = async (participant: ParticipantInfo, oldRoom: JamRoom, newRoom: JamRoom) => {
+    const oldGrant = createGrant(oldRoom, {id: participant.identity});
+
+    const newGrant = createGrant(newRoom, {id: participant.identity});
+
+    if(
+        !(
+            oldGrant.roomJoin === newGrant.roomJoin
+            &&
+            oldGrant.roomAdmin === newGrant.roomAdmin
+            &&
+            oldGrant.canPublishSources.join('-') === newGrant.canPublishSources.join('-') // really compare sets
+
+        )
+    ) {
+        await roomServiceClient.updateParticipant(
+                    newRoom.id,
+                    participant.identity,
+                    participant.metadata,
+                    newGrant);
+    }
+
+
+}
+
 export const createOrUpdateRoom = async (room: JamRoom) => {
     const metadata = JSON.stringify(room);
     const existingRoom = await roomServiceClient.listRooms([room.id]).then(rooms => rooms[0]);
+
+    const oldJamRoom: JamRoom | undefined = (existingRoom?.metadata && (JSON.parse(existingRoom.metadata) as JamRoom)) || room;
+
     if(existingRoom && existingRoom.metadata !== metadata) {
         await roomServiceClient.updateRoomMetadata(room.id, metadata);
     } else {
@@ -48,12 +77,7 @@ export const createOrUpdateRoom = async (room: JamRoom) => {
     roomServiceClient
         .listParticipants(room.id)
         .then(ps =>
-            ps.forEach(p =>
-                roomServiceClient.updateParticipant(
-                    room.id,
-                    p.identity,
-                    p.metadata,
-                    createGrant(room, {id: p.identity}))));
+            ps.forEach(p => updateGrantIfNecessary(p, oldJamRoom, room)));
 }
 
 export const createAccessToken = (room: JamRoom, info: IdentityInfo) => {

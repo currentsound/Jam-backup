@@ -52,7 +52,6 @@ function handleMessageFromServer(serverConnection, msg) {
   } else if (requestId === undefined) {
     sendMessage(connection, {t: 'server', d: {t: topic, d: data}});
   } else {
-    newForwardRequest(serverConnection, requestId);
     sendMessage(connection, {
       t: 'server',
       d: {t: topic, d: data},
@@ -77,17 +76,6 @@ async function handleMessage(connection, roomId, msg) {
     case 'response': {
       let {r: requestId} = msg;
       requestAccepted(requestId, data);
-      break;
-    }
-    case 'mediasoup': {
-      let {r: requestId} = msg;
-      forwardMessage(topic, {
-        t: topic,
-        d: data,
-        ro: roomId,
-        r: requestId,
-        p: senderId,
-      });
       break;
     }
     // messages where sender decides who gets it
@@ -322,39 +310,6 @@ function unsubscribeAll(connection) {
 
 // server side forwarding
 
-const forwardServers = new Set(); // Set(connection)
-const forwardServerTopics = new Map(); // topic => connection
-
-function addForwardServer(connection, topics) {
-  forwardServers.add(connection);
-  for (let topic of topics) {
-    forwardServerTopics.set(topic, connection);
-  }
-}
-
-function removeForwardServer(connection) {
-  forwardServers.delete(connection);
-  for (let entry of forwardServerTopics) {
-    let [topic, connection_] = entry;
-    if (connection_ === connection) {
-      forwardServerTopics.delete(topic);
-    }
-  }
-}
-
-function forwardMessage(serverTopic, msg) {
-  let connection = forwardServerTopics.get(serverTopic);
-  if (connection !== undefined) {
-    sendMessage(connection, msg);
-  }
-}
-
-function publishToServers(msg) {
-  for (let connection of forwardServers) {
-    sendMessage(connection, msg);
-  }
-}
-
 // request / response
 
 const serverId = Math.random().toString(32).slice(2, 12);
@@ -374,17 +329,6 @@ function newRequest(timeout = REQUEST_TIMEOUT) {
       reject(new Error('request timeout'));
     }, timeout);
   });
-  requests.set(requestId, request);
-  return request;
-}
-
-function newForwardRequest(connection, requestId) {
-  const request = {
-    id: requestId,
-    accept(data) {
-      sendMessage(connection, {t: 'response', d: data, r: requestId});
-    },
-  };
   requests.set(requestId, request);
   return request;
 }

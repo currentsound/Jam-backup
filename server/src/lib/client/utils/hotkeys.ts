@@ -3,7 +3,7 @@
 import {onMount} from "svelte";
 import {get} from "svelte/store";
 import type {Room} from "livekit-client";
-import type {JamRoom, Me, RoomAPI} from "$lib/types";
+import type {JamRoom, RoomAPI} from "$lib/types";
 import {getRoomContext} from "$lib/client/stores/room";
 
 export const usePushToTalk = () => {
@@ -52,14 +52,13 @@ export const usePushToTalk = () => {
   });
 }
 
-const handleCtrlCombo: Record<string, (livekitRoom: Room, jamRoom: JamRoom | undefined, me: Me, roomApi: RoomAPI) => Promise<void>> = {
+const handleCtrlCombo: Record<string, (livekitRoom: Room, jamRoom: JamRoom | undefined, roomApi: RoomAPI) => Promise<void>> = {
   r: async (
       {isRecording},
       _,
-      {iModerate},
       {startRecording, stopRecording, downloadRecording}
   ) => {
-    if (!iModerate) return;
+    if (!false) return;
     if (isRecording) {
       stopRecording();
       downloadRecording();
@@ -72,13 +71,12 @@ const ctrlKeys = Object.keys(handleCtrlCombo);
 
 
 export const useCtrlCombos = () => {
-  const {state: {livekitRoom, jamRoom, me}, api} = getRoomContext();
+  const {state: {livekitRoom, jamRoom}, api} = getRoomContext();
 
   onMount(() => {
     const onKeyPress = (event: KeyboardEvent) => {
       const $livekitRoom = get(livekitRoom);
       const $jamRoom = get(jamRoom);
-      const $me = get(me);
       const $roomApi = get(api);
       if (
         ctrlKeys.includes(event.key) &&
@@ -90,7 +88,7 @@ export const useCtrlCombos = () => {
       ) {
         event.stopPropagation();
         event.preventDefault();
-        handleCtrlCombo[event.key]?.($livekitRoom, $jamRoom, $me, $roomApi);
+        handleCtrlCombo[event.key]?.($livekitRoom, $jamRoom, $roomApi);
       }
     };
     document.addEventListener('keydown', onKeyPress);

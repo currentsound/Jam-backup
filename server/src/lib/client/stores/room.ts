@@ -1,4 +1,4 @@
-import {Participant, ParticipantEvent, RemoteParticipant, Room, RoomEvent, Track} from "livekit-client";
+import {Participant, ParticipantEvent, Room, RoomEvent, Track} from "livekit-client";
 import {derived, type Readable, readable, readonly, type Stores, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
@@ -14,17 +14,18 @@ import {createRoomApi} from "$lib/client/api";
 import {getMetadata, getMicrophoneTrack, toJamRoom} from "$lib/client/utils/livekit";
 import {identitiesStore} from "$lib/client/stores/identity";
 import {colors} from "$lib/client/utils/theme";
+import {TrackSource} from "livekit-server-sdk";
 
 const defaultListenedRoomEvents: RoomEvent[] = Object.values(RoomEvent);
 
-type RoomTransformer = (room: Room) => unknown;
+type RoomTransformer = (room: Room, event?: RoomEvent) => unknown;
 
 const roomListener = <T = Room>(room: Room, events: RoomEvent[] = defaultListenedRoomEvents, transform: RoomTransformer = (room) => room, initialValue?: T) =>
     readable<T>(initialValue || transform(room) as T, (set) => {
-        const updater = () => set(transform(room) as T);
+        const updater = (event: RoomEvent) => () => set(transform(room, event) as T);
 
         for (const event of events) {
-            room.on(event, updater);
+            room.on(event, updater(event));
         }
     })
 
@@ -63,9 +64,10 @@ const getReactions = (room: Room) =>
 
 
 export const userInteracted = writable<boolean>(false);
+export const enterOnce = writable<boolean>(false);
 
 
-const participantContext = (jamRoom?: JamRoom) => (participant: Participant): ParticipantContext => {
+export const createParticipantContext = (jamRoom?: JamRoom) => (participant: Participant): ParticipantContext => {
     const tracks =
         [...participant.trackPublications.values()]
             .map((tp) => tp.track)
@@ -106,8 +108,8 @@ const participantContext = (jamRoom?: JamRoom) => (participant: Participant): Pa
 
 export const getParticipantContext = (participant: Participant, jamRoomStore: Readable<JamRoom | undefined>) => derived<Stores, ParticipantContext>(jamRoomStore, ($jamRoom, set) => {
 
-    set(participantContext($jamRoom)(participant));
-    const listener = () => set(participantContext($jamRoom)(participant));
+    set(createParticipantContext($jamRoom)(participant));
+    const listener = () => set(createParticipantContext($jamRoom)(participant));
 
     for(const e of Object.values(ParticipantEvent)) {
         // @ts-ignore
@@ -123,24 +125,6 @@ export const getParticipantContext = (participant: Participant, jamRoomStore: Re
     }
 })
 
-export const getParticipants = (room: Room) => {
-    return readable<RemoteParticipant[]>(
-        [...room.remoteParticipants.values()],
-        (set) => {
-            const listener = () =>
-                set([...room.remoteParticipants.values()]);
-            room.on(RoomEvent.ParticipantConnected, listener);
-            room.on(RoomEvent.ParticipantDisconnected, listener);
-            return () => {
-                room.removeListener(RoomEvent.ParticipantConnected, listener);
-                room.removeListener(RoomEvent.ParticipantDisconnected, listener);
-            };
-        },
-    );
-};
-
-
-
 export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, jamRoom: JamRoom | undefined) => {
 
     const livekitRoom = new Room(jamConfig.livekit.roomOptions);
@@ -148,6 +132,29 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     if(getContext('room-context')) {
         throw new Error('Cannot reinitialize room context');
     }
+
+    livekitRoom.localParticipant.on('participantPermissionsChanged', async () => {
+        const shouldHaveMicrophone = !!livekitRoom.localParticipant.permissions?.canPublishSources.includes(TrackSource.MICROPHONE);
+        if(shouldHaveMicrophone) {
+            await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+        } else {
+            const trackPublication = livekitRoom.localParticipant.getTrackPublication(Track.Source.Microphone);
+            if(trackPublication?.track) {
+                await livekitRoom.localParticipant.unpublishTrack(trackPublication.track, true);
+            }
+        }
+
+
+        const shouldHaveCamera = !!livekitRoom.localParticipant.permissions?.canPublishSources.includes(TrackSource.CAMERA);
+        if(shouldHaveCamera) {
+            await livekitRoom.localParticipant.setCameraEnabled(true);
+        } else {
+            const trackPublication = livekitRoom.localParticipant.getTrackPublication(Track.Source.Camera);
+            if(trackPublication?.track) {
+                await livekitRoom.localParticipant.unpublishTrack(trackPublication.track, true);
+            }
+        }
+    });
 
     const livekitRoomStore = roomListener(livekitRoom);
     const jamRoomStore = roomListener<JamRoom | undefined>(
@@ -165,13 +172,6 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
             createRoomApi(roomId, $room, $identities, $jamRoom, reactions));
 
 
-    const me = derived(
-        [livekitRoomStore, jamRoomStore],
-        ([$room, $jamRoom]) => ({
-            ...participantContext($jamRoom)($room.localParticipant),
-            hasMicFailed: !!$room.localParticipant.lastMicrophoneError
-        })
-    );
 
     const context: RoomContext = {
         state: {
@@ -179,7 +179,6 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
             livekitRoom: livekitRoomStore,
             jamRoom: jamRoomStore,
             colors: derived(jamRoomStore, ($jamRoom) => colors($jamRoom)),
-            me,
             reactions: readonly(reactions),
         },
         api,

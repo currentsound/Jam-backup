@@ -1,8 +1,9 @@
 <script lang="ts">
 import Container from './Container.svelte';
+import Connecting from "./Connecting.svelte";
 import RoomHeader from './RoomHeader.svelte';
 import {mqp} from "$lib/client/stores/styles";
-import {getRoomContext, userInteracted} from "$lib/client/stores/room";
+import {getRoomContext, userInteracted, enterOnce} from "$lib/client/stores/room";
 
 const iOS =
   /^iP/.test(navigator.platform) ||
@@ -21,12 +22,20 @@ const forbidden = false;
 let schedule = room?.schedule
 let fetchingToken = false;
 
+if($enterOnce) {
+  enterOnce.set(false);
+  userInteracted.set(true);
+  fetchingToken = true;
+  $api.enterRoom();
+}
+
 
 </script>
-    <Container>
+
       {#if fetchingToken}
-        Connecting ...
+        <Connecting text="Acquiring token"/>
         {:else}
+        <Container>
       <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
         <RoomHeader/>
         <p class="hidden pt-4 pb-4">
@@ -103,7 +112,7 @@ let fetchingToken = false;
           🗓 Add this to my calendar
         </button>
       </div>
+        </Container>
       {/if}
-    </Container>
   );
 }

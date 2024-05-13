@@ -1,36 +1,21 @@
 <script lang="ts">
 
 import Actions from './actions/Actions.svelte';
-import {breakpoints, getWidth} from '$lib/client/stores/styles';
 import {toStyleString} from '$lib/client/utils/css';
 import {MicOnSvg, MicOffSvg} from './svg';
-import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
+import {createParticipantContext, getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {isDark} from "$lib/client/utils/util";
-import {LocalParticipant} from "livekit-client";
 import RoleActions from "$lib/components/actions/RoleActions.svelte";
 import {dynamicConfig} from "$lib/client/stores/location";
+import {getMicrophoneTrack} from "$lib/client/utils/livekit";
+import {Track} from "livekit-client";
 
 const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
-let navigationStyle = {
-  position: 'fixed',
-  bottom: '0',
-  marginLeft: '-15px',
-  flex: 'none',
-  borderLeft: '2px solid lightgrey',
-  borderRight: '2px solid lightgrey',
-};
 
-let navigationStyleSmall = {
-  padding: '0 22px 22px 22px',
-  marginLeft: '-12px',
-  boxSizing: 'border-box',
-  borderLeft: '0px',
-  borderRight: '0px',
-};
+    let {state: {livekitRoom, jamRoom, colors}, api} = getRoomContext();
 
-    let {state: {me, jamRoom, colors}, api} = getRoomContext();
-
+    let localParticipant = $livekitRoom.localParticipant;
     let speaker = false;
     let handRaised = false;
     let micOn = false;
@@ -39,35 +24,29 @@ let navigationStyleSmall = {
     let isColorDark = isDark($colors.buttonPrimary);
     let {ux} = $dynamicConfig || {};
     let {showActions, showRoleActions} = getActionsContext();
-    let width = getWidth();
-
 
   $: {
-      micOn = $me.microphoneEnabled;
-      micMuted = $me.microphoneMuted;
-      handRaised = $me.state.handRaised;
-      speaker = $me.roles.speaker;
+      localParticipant = $livekitRoom.localParticipant;
 
-      console.log('MicOn', micOn);
+      let me = createParticipantContext($jamRoom)(localParticipant);
+
+      micOn = !!localParticipant.getTrackPublication(Track.Source.Microphone);
+      micMuted = getMicrophoneTrack(localParticipant)?.isMuted ?? true;
+      handRaised = me.state.handRaised;
+      speaker = me.roles.speaker;
   }
 
   let talk = () => {
     if (micOn) {
         $api.toggleMicrophone();
     } else {
-        ($me.participant as LocalParticipant).setMicrophoneEnabled(true);
+        localParticipant.setMicrophoneEnabled(true).catch(console.log);
     }
   }
 
   </script>
     <div
-      class="z-10 p-4"
-      style={toStyleString({
-        ...navigationStyle,
-        ...($width < breakpoints.sm ? navigationStyleSmall : null),
-        width: $width < 720 ? '100%' : '700px',
-        backgroundColor: $colors.background,
-      })}
+      class="z-10 p-4 w-full"
     >
       {#if $showRoleActions}
         <RoleActions
@@ -114,7 +93,7 @@ let navigationStyleSmall = {
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
               on:click={() => $api.toggleCamera()}
             >
-              Camera {$me.participant.isCameraEnabled ? 'Off' : 'On'}
+              Camera {localParticipant.isCameraEnabled ? 'Off' : 'On'}
             </button>
             <button
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"

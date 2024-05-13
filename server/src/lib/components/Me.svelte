@@ -1,6 +1,5 @@
 <script lang="ts">
-    import Container from './Container';
-    import {getMyInfo} from "$lib/client/stores/room";
+    import Container from './Container.svelte';
     let myInfo = getMyInfo();
 </script>
 <Container style="height: initial; minHeight: 100%">

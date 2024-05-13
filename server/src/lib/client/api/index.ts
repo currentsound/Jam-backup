@@ -61,12 +61,12 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         },
         enterRoom: () => backend
             .getToken(identity, roomId)
-            .then((result: JamAccess | undefined) => result && room.connect(result.livekitUrl, result.token))
+            .then((result: JamAccess | undefined) => result && room.connect(result.livekitUrl, result.token, {}))
             .then(() => setMetadata({info: identity.info, state: {handRaised: false}}))
             .then(async () => {
                 if(jamRoom?.speakers.includes(identity.publicKey)) {
                     await room.localParticipant.setMicrophoneEnabled(true);
-                    console.log(room.localParticipant.isMicrophoneEnabled);
+                    //console.log(room.localParticipant.isMicrophoneEnabled);
                 }
             }),
         leaveRoom: () => room.disconnect(),

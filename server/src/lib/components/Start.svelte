@@ -1,18 +1,27 @@
 <script lang="ts">
 
-    import {navigate, route} from '$lib/client/stores/location';
     import Container from './Container.svelte';
     import {colors} from '$lib/client/utils/theme';
     import type {JamRoom} from "$lib/types";
     import {userInteracted} from "$lib/client/stores/room";
+    import {getServerContext} from "$lib/client/stores/server";
+    import {goto} from "$app/navigation";
+    import {getWidth, mqp, setContainerForWidth} from "$lib/client/stores/styles";
+    import {toStyleString} from "$lib/client/utils/css";
+    import {onMount} from "svelte";
 
     export let newRoom: Partial<JamRoom> = {stageOnly: false, videoEnabled: false};
     export let roomFromURIError = false;
-    let urlRoomId = $route;
+
+    const {config, api} = getServerContext();
+
+    const width = getWidth();
+    let container: HTMLElement;
+    onMount(() => setContainerForWidth(container));
 
     let {stageOnly, videoEnabled} = newRoom;
 
-    let submit = e => {
+    let submit = (e: Event) => {
         e.preventDefault();
         userInteracted.set(true);
         const roomId = Math.random().toString(36).substring(2, 6);
@@ -22,20 +31,29 @@
                 stageOnly,
                 videoEnabled,
             };
-            let ok = await createRoom(roomId, roomPosted);
+            let ok = await $api.createRoom(roomId, roomPosted);
             if (ok) {
-                if (urlRoomId !== roomId) navigate('/' + roomId);
-                enterRoom(roomId);
+                await goto('/' + roomId);
             }
         })();
     };
 
     const humins = ['DoubleMalt', 'mitschabaude', '__tosh'].sort(() => Math.random() - 0.5);
 
-    const roomColors = colors(newRoom);
+    const roomColors = colors();
 
 </script>
-<Container style={{height: 'initial', minHeight: '100%'}}>
+<div
+        bind:this={container}
+        class={mqp('jam sm:pt-12', $width)}
+        style={toStyleString({
+        position: 'relative',
+        minHeight: '-webkit-fill-available',
+        height: '100vh'
+      })}
+>
+
+<Container style="height: initial; minHeight: 100%">
     <div class="p-6 md:p-10">
         <div
                 class={
@@ -45,7 +63,7 @@
           }
         >
             The Room ID{' '}
-            <code class="text-gray-900 bg-yellow-200">{urlRoomId}</code> is
+            <code class="text-gray-900 bg-yellow-200">{'???'}</code> is
             not valid.
             <br/>
             <a
@@ -65,11 +83,11 @@
 
         <p>Click on the button below to start a room.</p>
 
-        <form class="pt-6" onSubmit={submit}>
+        <form class="pt-6" on:submit={submit}>
             <button
-                    onClick={submit}
+                    on:click={submit}
                     class="select-none h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
-                    style={{backgroundColor: roomColors.buttonSecondary}}
+                    style="background-color: {roomColors.buttonSecondary}"
             >
                 🌱 Start room
             </button>
@@ -77,7 +95,7 @@
 
         <hr class="mt-14 mb-14"/>
 
-        {#if !window.jamConfig.hideJamInfo }
+        {#if !config.hideJamInfo }
             <div>
                 <h1>Welcome to Jam</h1>
 
@@ -95,7 +113,7 @@
                                 class="underline"
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{color: roomColors.link}}
+                                style="color: {roomColors.link}"
                         >
                             Learn&nbsp;more&nbsp;about&nbsp;Jam.
                         </a>
@@ -113,7 +131,7 @@
                                 class="underline"
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{color: roomColors.link}}
+                                style="color: {roomColors.link}"
                         >
                             Sign up for the Jam Pro Early Access Program.
                         </a>
@@ -121,7 +139,7 @@
                     <div class="flex-initial">
                         <img
                                 class="mt-8 md:mt-4 md:mb-4 md:mr-8"
-                                style={{width: 130, height: 130}}
+                                style="width: 130; height: 130"
                                 alt="Jam mascot by @eejitlikeme"
                                 title="Jam mascot by @eejitlikeme"
                                 src="/img/jam.jpg"
@@ -159,3 +177,4 @@
         </div>
     </div>
 </Container>
+</div>

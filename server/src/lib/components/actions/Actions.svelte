@@ -3,21 +3,24 @@ import EditIdentity from '../modals/EditIdentity.svelte';
 import {ButtonContainer, SecondaryButton} from '../buttons';
 import StreamingModal from '../modals/StreamingModal.svelte';
 import {mqp} from "$lib/client/stores/styles";
-import {getActionsContext, getRoomContext} from "$lib/client/stores/room";
+import {createParticipantContext, getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {openModal} from "$lib/client/stores/modals";
 
   const { showActions } = getActionsContext();
   const onCancel = () => showActions.set(false);
 
-  const {state: {livekitRoom, jamRoom, me}, api} = getRoomContext();
+  const {state: {livekitRoom, jamRoom}, api} = getRoomContext();
   let stageOnly = !!$jamRoom?.stageOnly;
 
   let iModerate: boolean;
   let iSpeak: boolean;
+  let id: string;
 
   $: {
-    iModerate = $me.roles.moderator;
-    iSpeak = $me.roles.speaker;
+    const me = createParticipantContext($jamRoom)($livekitRoom.localParticipant);
+    iModerate = me.roles.moderator;
+    iSpeak = me.roles.speaker;
+    id = me.id;
   }
 
   let {addSpeaker, removeSpeaker, leaveStage, startRecording, stopRecording, downloadRecording} = $api;
@@ -39,14 +42,14 @@ import {openModal} from "$lib/client/stores/modals";
         {/if}
         {#if !stageOnly && iModerate && !iSpeak }
           <SecondaryButton
-            onClick={() => addSpeaker($me.id).then(onCancel)}
+            onClick={() => addSpeaker(id).then(onCancel)}
           >
             ↑ Move to Stage
           </SecondaryButton>
         {/if}
         {#if !stageOnly && iModerate && iSpeak }
           <SecondaryButton
-            onClick={() => removeSpeaker($me.id).then(onCancel)}
+            onClick={() => removeSpeaker(id).then(onCancel)}
           >
             ↓ Leave Stage
           </SecondaryButton>

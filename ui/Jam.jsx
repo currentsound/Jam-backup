@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo} from 'react';
-import Modals from './views/Modal';
+import Modals from './views/Modal.svelte';
 import {mergeClasses} from './lib/util';
 import {useProvideWidth, WidthContext} from './lib/tailwind-mqp';
 import {use} from 'use-minimal-state';

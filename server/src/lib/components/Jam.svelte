@@ -2,16 +2,14 @@
     import {getWidth, mqp, setContainerForWidth} from "$lib/client/stores/styles";
     import Modals from './Modals.svelte';
     import {toStyleString} from "$lib/client/utils/css";
-    import {dynamicConfig, route} from "$lib/client/stores/location";
+    import {dynamicConfig} from "$lib/client/stores/location";
     import {onMount} from "svelte";
     import {getRoomContext} from "$lib/client/stores/room";
     import StartFromURL from "$lib/components/StartFromURL.svelte";
     import {ConnectionState} from "livekit-client";
     import Room from "$lib/components/Room.svelte";
     import EnterRoom from "$lib/components/EnterRoom.svelte";
-    import Container from "$lib/components/Container.svelte";
-
-    export let style : Partial<CSSStyleDeclaration>;
+    import Connecting from "$lib/components/Connecting.svelte";
 
     let container: HTMLElement;
 
@@ -19,7 +17,7 @@
 
     onMount(() => setContainerForWidth(container));
 
-    const {state: {roomId, jamRoom, livekitRoom, me}} = getRoomContext();
+    const {state: {roomId, jamRoom, livekitRoom}} = getRoomContext();
 
 </script>
 
@@ -28,19 +26,17 @@
         class={mqp('jam sm:pt-12', $width)}
         style={toStyleString({
         position: 'relative',
-        height: '100%',
         minHeight: '-webkit-fill-available',
-        ...style
+        height: '100vh'
       })}
 >
     {#if $livekitRoom.state === ConnectionState.Connected}
         <Room />
     {:else if $livekitRoom.state === ConnectionState.Connecting || $livekitRoom.state === ConnectionState.Reconnecting}
-        <Container>
-            Connecting...
-        </Container>
+        <Connecting/>
     {:else}
         {#if !!$jamRoom}
+
             <EnterRoom />
         {:else}
             <StartFromURL {...{roomId, newRoom: $dynamicConfig.room}} />

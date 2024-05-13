@@ -1,16 +1,6 @@
 import {Base64} from "js-base64";
 
-export {parsePath, parseUrlConfig};
-
-function parsePath(pathname: string) {
-  const [first = null, second] = pathname.split('/').filter(Boolean);
-  const stageOnly = first === 's';
-  const videoEnabled = first === 'v';
-  // other special configs go here
-  const route = stageOnly || videoEnabled ? second : first;
-  const room = {stageOnly, videoEnabled};
-  return {route, room};
-}
+export {parseUrlConfig};
 
 function parseUrlConfig(search: string, hash: string) {
   const hashContent = hash.slice(1);

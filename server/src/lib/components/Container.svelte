@@ -7,13 +7,18 @@
   export let style: string = '';
   const width = getWidth()
 
-  const {state: {jamRoom}} = getRoomContext()
+  const jamRoom = getRoomContext()?.state?.jamRoom;
 
   let belowSm = $width < breakpoints.sm;
   let border = belowSm ? '0px' : '2px solid lightgrey';
   const roomColors = colors($jamRoom);
   const backgroundColor = roomColors.background;
   const color = roomColors.text;
+
+  $: {
+      belowSm = $width < breakpoints.sm;
+      border = belowSm ? '0px' : '2px solid lightgrey';
+  }
 </script>
 <style>
     div {
@@ -35,6 +40,7 @@
       style:border-bottom="0px"
       style:margin="0 auto"
       style:color={color}
+      style:min-height="100%"
       style={style}
       {...$$restProps}
     >

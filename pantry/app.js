@@ -34,18 +34,21 @@ app.use('/stream/hls', express.static(hlsFileLocationPath));
 
 app.use(
   '/api/v1/',
-  controller(
-    'rooms',
-    roomAuthenticator,
-    id => id,
-    () => 'room-info'
-  )
+  controller({
+    prefix: 'rooms',
+    authenticator: roomAuthenticator,
+    broadcastRoom: id => id,
+    broadcastChannel: () => 'room-info',
+  })
 );
 app.use('/api/v1/rooms/:id/roomKey', roomKeyRouter);
 app.use('/api/v1/rooms/:id/live', liveRoomRouter);
 app.use('/api/v1/rooms/:id/recordings.zip', recordingsRouter);
 
-app.use('/api/v1/', controller('identities', identityAuthenticator));
+app.use(
+  '/api/v1/',
+  controller({prefix: 'identities', authenticator: identityAuthenticator})
+);
 
 app.use('/api/v1/admin/', adminRouter);
 

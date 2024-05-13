@@ -2,26 +2,35 @@
 import Modal from './Modal.svelte';
 import {rawTimeZones} from '@vvo/tzdb';
 import {mqp} from "$lib/client/stores/styles";
+import {getRoomContext} from "$lib/client/stores/room";
+import type {JamRoom, JamSchedule} from "$lib/types";
 
   export let close: () => void;
 
-  let submitUpdate = async partialRoom => {
-    updateRoom(roomId, {...room, ...partialRoom});
+  let {state: {jamRoom: room}, api} = getRoomContext();
+
+  let submitUpdate = async (partialRoom: Partial<JamRoom>) => {
+    if(!$room) {
+      return;
+    }
+    await $api.updateRoom({...$room, ...partialRoom});
   };
 
-  let name = $room.name;
-  let description = $room.description;
-  let color= $room.color || '#4B5563';
-  let logoURI = $room.logoURI;
-  let buttonURI =$room.buttonURI;
-  let buttonText = $room.buttonText;
-  let closed = $room.closed;
-  let shareUrl = $room.shareUrl;
+  let name = $room?.name;
+  let description = $room?.description;
+  let color= $room?.color || '#4B5563';
+  let logoURI = $room?.logoURI;
+  let buttonURI =$room?.buttonURI;
+  let buttonText = $room?.buttonText;
+  let closed = $room?.closed;
+  let shareUrl = $room?.shareUrl;
 
-  let schedule = $room.schedule;
-  let scheduleCandidate = {
+  let schedule = $room?.schedule;
+  let scheduleCandidate: JamSchedule = {
     date: `${new Date().toISOString().split('T')[0]}`,
+    time: `${new Date().toISOString().split('T')[1]}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    repeat: undefined,
   };
   let showTimezoneSelect = false;
   let showRepeatSelect = false;
@@ -30,32 +39,21 @@ import {mqp} from "$lib/client/stores/styles";
     return scheduleCandidate?.date && scheduleCandidate?.time;
   };
 
-  let handleScheduleChange = e => {
-    setScheduleCandidate({
-      ...scheduleCandidate,
-      [e.target.name]: e.target.value,
-    });
-    console.log(scheduleCandidate);
-  };
+let removeSchedule = (e: Event) => {
+  e.preventDefault();
+  schedule = undefined;
+  submitUpdate({schedule});
+}
 
-  let removeSchedule = e => {
-    e.preventDefault();
-    setSchedule(undefined);
-    let schedule = undefined;
-
-    submitUpdate({schedule});
-  };
-
-  let submitSchedule = e => {
+  let submitSchedule = (e: Event) => {
     e.preventDefault();
     if (scheduleCandidate) {
-      let schedule = scheduleCandidate;
-      setSchedule(scheduleCandidate);
+      schedule = scheduleCandidate;
       submitUpdate({schedule});
     }
   };
 
-  let submit = async e => {
+  let submit = async (e: Event) => {
     e.preventDefault();
     await submitUpdate({
       name,
@@ -65,19 +63,19 @@ import {mqp} from "$lib/client/stores/styles";
       buttonURI,
       buttonText,
       closed,
-      shareUrl,
+      //shareUrl,
     });
     close();
   };
 
-  const showAdvanced = !!(room.logoURI || room.color);
+  let showAdvanced = !!($room?.logoURI || $room?.color);
 
 </script>
     <Modal close={close}>
       <h1>Room Settings</h1>
       <br />
       <div>
-        <form onSubmit={submit}>
+        <form on:submit={submit}>
           <input
             class={mqp(
               'rounded placeholder-gray-300 bg-gray-50 w-full md:w-96'
@@ -122,9 +120,9 @@ import {mqp} from "$lib/client/stores/styles";
 
           {#if !showAdvanced }
             <div class="p-2 text-gray-500 italic">
-              <span onClick={() => setShowAdvanced(!showAdvanced)}>
+              <button on:click={() => showAdvanced = !showAdvanced}>
                 <svg
-                  style={{cursor: 'pointer'}}
+                  style="cursor: pointer"
                   class="pb-1 h-5 w-5 inline-block"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -138,7 +136,7 @@ import {mqp} from "$lib/client/stores/styles";
                     d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
                   />
                 </svg>
-              </span>
+              </button>
             </div>
           {:else}
             <div>
@@ -194,12 +192,9 @@ import {mqp} from "$lib/client/stores/styles";
                 )}
                 type="text"
                 placeholder="Button Text"
-                value={buttonText}
+                bind:value={buttonText}
                 name="jam-room-button-text"
                 autoComplete="off"
-                onChange={e => {
-                  setButtonText(e.target.value);
-                }}
               />
               <div class="p-2 text-gray-500 italic">
                 Set the text for the {`'call to action'`} button.{' '}
@@ -213,12 +208,9 @@ import {mqp} from "$lib/client/stores/styles";
                 )}
                 type="text"
                 placeholder="Share URL"
-                value={shareUrl}
+                bind:value={shareUrl}
                 name="jam-room-share-url"
                 autoComplete="off"
-                onChange={e => {
-                  setShareUrl(e.target.value);
-                }}
               />
               <div class="p-2 text-gray-500 italic">
                 The URL used for sharing the room.
@@ -250,13 +242,13 @@ import {mqp} from "$lib/client/stores/styles";
 
           <div class="flex">
             <button
-              onClick={submit}
+              on:click={submit}
               class="flex-grow mt-5 h-12 px-6 text-lg text-white bg-gray-600 rounded-lg focus:shadow-outline active:bg-gray-600 mr-2"
             >
               Update Room
             </button>
             <button
-              onClick={close}
+              on:click={close}
               class="mt-5 h-12 px-6 text-lg text-black bg-gray-100 rounded-lg focus:shadow-outline active:bg-gray-300"
             >
               Cancel
@@ -281,21 +273,16 @@ import {mqp} from "$lib/client/stores/styles";
                 name="date"
                 placeholder="yyyy-mm-dd"
                 min={`${
-                  new Date(new Date() - 86400000).toISOString().split('T')[0]
+                  new Date(new Date().getMilliseconds() - 86400000).toISOString().split('T')[0]
                 }`}
-                value={
-                  scheduleCandidate?.date ||
-                  `${new Date().toISOString().split('T')[0]}`
-                }
-                onChange={handleScheduleChange}
+                bind:value={scheduleCandidate.date}
               />
               <input
                 type="time"
                 class="flex-none ml-3 p-2 border rounded"
                 name="time"
                 placeholder="hh:mm"
-                value={scheduleCandidate?.time || ''}
-                onChange={handleScheduleChange}
+                bind:value={scheduleCandidate.time}
               />
             </div>
             <div
@@ -304,17 +291,16 @@ import {mqp} from "$lib/client/stores/styles";
               }
             >
               {scheduleCandidate.timezone}{' '}
-              <span
+              <button
                 class="underline"
-                onClick={() => showTimezoneSelect = true}
+                on:click={() => showTimezoneSelect = true}
               >
                 change
-              </span>
+              </button>
             </div>
             <select
               name="timezone"
               bind:value={scheduleCandidate.timezone}
-              on:change={handleScheduleChange}
               class={
                 showTimezoneSelect ? 'w-full border mt-3 p-2 rounded' : 'hidden'
               }
@@ -327,16 +313,16 @@ import {mqp} from "$lib/client/stores/styles";
             </select>
 
             <div class={showRepeatSelect ? 'hidden' : 'p-2 text-gray-500'}>
-              <span
+              <button
                 class="underline"
-                onClick={() => showRepeatSelect = true}
+                on:click={() => showRepeatSelect = true}
               >
                 repeat?
-              </span>
+              </button>
             </div>
             <select
               name="repeat"
-              on:change={handleScheduleChange}
+              bind:value={scheduleCandidate.repeat}
               class={
                 showRepeatSelect ? 'border mt-3 p-2 rounded' : 'hidden'
               }
@@ -362,15 +348,15 @@ import {mqp} from "$lib/client/stores/styles";
                 : ''}
             </div>
             <div class={schedule ? 'p-3 text-gray-500' : 'hidden'}>
-              <span onClick={removeSchedule} class="underline">
+              <button on:click={removeSchedule} class="underline">
                 Remove schedule
-              </span>
+              </button>
             </div>
           </div>
 
           <div class={!schedule && completeSchedule() ? 'flex' : 'hidden'}>
             <button
-              onClick={submitSchedule}
+              on:click={submitSchedule}
               class="flex-grow mt-5 h-12 px-6 text-lg text-white bg-gray-600 rounded-lg focus:shadow-outline active:bg-gray-600 mr-2"
             >
               Set Schedule

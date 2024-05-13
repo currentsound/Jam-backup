@@ -8,11 +8,15 @@
   import {openModal} from "$lib/client/stores/modals";
   import EditRoom from "$lib/components/modals/EditRoom.svelte";
 
-  const {state: {jamRoom, me}} = getRoomContext();
+  const {state: {jamRoom, livekitRoom}} = getRoomContext();
 
   let roomColors = colors($jamRoom);
-
   let isRecording = false;
+  let iModerate = false;
+
+  $: {
+      iModerate = !!$jamRoom?.moderators.includes($livekitRoom.localParticipant.identity);
+  }
 
 </script>
 <div class="flex room-header">
@@ -59,16 +63,15 @@
             <MicOnSvg className="h-5" stroke="#ffffff" />
           </div>
         {/if}
-        {#if $me.iModerate}
-          <div
-            role="button"
+        {#if iModerate}
+          <button
             aria-label="Room settings"
             class="w-8 h-6 cursor-pointer"
             on:click={() => openModal(EditRoom)}
             style="color: {roomColors.text}"
           >
             <EditSvg />
-          </div>
+          </button>
         {/if}
       </div>
     </div>
