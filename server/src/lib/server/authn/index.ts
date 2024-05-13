@@ -1,6 +1,7 @@
 import type {Handle} from "@sveltejs/kit";
 import {identityAccessor} from "$lib/server/handlers/identity";
 import {verify} from "$lib/common/tokens";
+import {fromBase64} from "js-base64";
 
 const extractToken = (req: Request) => {
   const authHeader = req.headers.get('Authorization');
@@ -9,8 +10,12 @@ const extractToken = (req: Request) => {
 
 export const authenticate: Handle = async ({ resolve, event }) => {
          try {
-
-          const verifiedRecord = await verify(extractToken(event.request));
+             console.log('Extracting token')
+             const token = extractToken(event.request);
+             console.log('token', token);
+          const verifiedRecord = await verify(token);
+             console.log('record', verifiedRecord);
+             console.log(fromBase64(token));
           if (verifiedRecord?.key) {
             event.locals.identity = await identityAccessor.get(verifiedRecord.key);
           }
