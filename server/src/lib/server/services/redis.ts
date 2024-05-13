@@ -24,9 +24,9 @@ let identityCount = async () =>
     Object.keys(localStore).filter(key => key.startsWith('identities/')).length;
 
 if(!local) {
-  const client = createClient({url: 'redis://pantryredis'});
+  const client = createClient({url: 'redis://redis'});
   client.on('error', async (err) => {
-    console.log('error connecting to redis, host pantryredis');
+    console.log('error connecting to redis, host redis');
     console.error(err);
     await client.quit();
   });
