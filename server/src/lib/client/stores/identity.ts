@@ -11,17 +11,19 @@ const isDefault = (identity: IdentityWithKeys, identities: Identities) =>
 
 export const identitiesStore = persisted<Identities>('identities', {});
 
+export const uploadIdentity = (identity: IdentityWithKeys) => putOrPost(
+      identity,
+      `/identities/${identity.publicKey}`,
+      identity.info
+  );
+
 export const updateIdentity = (roomId: string, identity: IdentityWithKeys) => {
   identitiesStore.update((identities) => ({
     ...identities,
     [isDefault(identity, identities) ? '_default' : roomId]: identity
   }));
 
-  return putOrPost(
-      identity,
-      `/identities/${identity.publicKey}`,
-      identity.info
-  );
+  return uploadIdentity(identity);
 
 }
 
@@ -142,7 +144,7 @@ const migrateKeyPairs = () => {
 
 export const identityReady = (async () => {
   if(globalThis.window) {
-    await createDefaultIdentityIfNeeded();
+    await createDefaultIdentityIfNeeded().then(uploadIdentity);
     migrateKeyPairs();
   }
 })()
