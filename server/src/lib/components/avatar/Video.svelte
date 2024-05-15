@@ -7,7 +7,7 @@
     const srcObject = (node: HTMLVideoElement, stream: MediaStream) => {
         node.srcObject = stream;
         return {
-            update(newStream) {
+            update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
                     node.srcObject = newStream;
                 }
@@ -19,7 +19,7 @@
 <video
         class={className}
         use:srcObject={stream}
-        onClick={onClick}
+        on:click={onClick}
         style={mirror ? "transform: 'scaleX(-1)'" : "" }
         autoPlay
         playsInline

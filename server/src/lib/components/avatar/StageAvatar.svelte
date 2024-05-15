@@ -25,6 +25,7 @@
   let mirror = participant?.isLocal;
 
   let video: MediaStream | undefined;
+  let audio: MediaStream | undefined;
   let micMuted: boolean;
   let videoMuted: boolean;
   let info: IdentityInfo;
@@ -36,17 +37,33 @@
     if(kind === "videoinput") {
       video = $participantContext.cameraTrack?.mediaStream;
     }
+    if(kind === "audioinput") {
+      audio = $participantContext.microphoneTrack?.mediaStream;
+    }
   }) ;
 
   $: {
     micMuted = !!$participantContext.microphoneTrack?.isMuted;
     video = $participantContext.cameraTrack?.mediaStream;
+    audio = $participantContext.microphoneTrack?.mediaStream;
     videoMuted = !!$participantContext.cameraTrack?.isMuted;
     info = $participantContext.info;
     isSpeaking = $participantContext.isSpeaking;
     moderator = $participantContext.roles.moderator;
     name = displayName($participantContext.info, $jamRoom);
   }
+
+  const srcObject = (node: HTMLAudioElement, stream: MediaStream) => {
+    node.srcObject = stream;
+    return {
+      update(newStream: MediaStream) {
+        if (node.srcObject != newStream) {
+          node.srcObject = newStream;
+        }
+      },
+    };
+  };
+
 
 </script>
       <li
@@ -64,6 +81,9 @@
             class="human-radius p-1 relative flex justify-center"
           >
             <SpeakerRing isSpeaking={isSpeaking} roomColors={$colors} />
+            {#if audio}
+              <audio class='hidden' use:srcObject={audio} />
+            {/if}
             {#if video && !videoMuted}
               <Video
                 className={mqp(
