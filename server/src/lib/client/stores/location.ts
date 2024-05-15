@@ -9,6 +9,7 @@ export const initializeLocationStore = () => {
   const updater = () => writableLocationStore.set(location);
   window.addEventListener('popstate', updater);
   window.addEventListener('hashchange', updater);
+  updater();
 
 }
 

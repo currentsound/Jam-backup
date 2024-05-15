@@ -39,7 +39,7 @@
 
             <EnterRoom />
         {:else}
-            <StartFromURL {...{roomId, newRoom: $dynamicConfig.room}} />
+            <StartFromURL />
         {/if}
     {/if}
     <Modals/>

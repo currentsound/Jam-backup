@@ -39,7 +39,7 @@ const writeToPath = (o: Config, path: string[], value: string): Config | string 
     return value;
   }
   const key = path[0];
-  const nextObject = o[key] as Config;
+  const nextObject = o[key] as Config ?? {};
   return {
     ...o,
     [key]: writeToPath(nextObject, path.slice(1), value)

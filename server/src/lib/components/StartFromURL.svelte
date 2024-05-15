@@ -1,29 +1,44 @@
 <script lang="ts">
-import Container from './Container.svelte';
-import {mqp} from "$lib/client/stores/styles";
-import {getRoomContext, userInteracted} from "$lib/client/stores/room";
-import type {EventHandler} from "svelte/elements";
-import type {JamRoom} from "$lib/types";
-import {getServerContext} from "$lib/client/stores/server";
+  import Container from './Container.svelte';
+  import {mqp} from "$lib/client/stores/styles";
+  import {getRoomContext, userInteracted} from "$lib/client/stores/room";
+  import type {EventHandler} from "svelte/elements";
+  import {getServerContext} from "$lib/client/stores/server";
+  import {parseUrlConfig} from "$lib/client/utils/url-utils";
+  import type {DynamicConfig} from "$lib/types";
+  import {locationStore} from "$lib/client/stores/location";
 
-const iOS =
-  /^iP/.test(navigator.platform) ||
-  (/^Mac/.test(navigator.platform) && navigator.maxTouchPoints > 4);
+  const iOS =
+    /^iP/.test(navigator.platform) ||
+    (/^Mac/.test(navigator.platform) && navigator.maxTouchPoints > 4);
 
-const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
-
-  export let roomId: string;
-  export let newRoom: Partial<JamRoom>;
+  const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
 
   const { api: serverApi } = getServerContext();
-  const { api: roomApi, state: {jamRoom} } = getRoomContext();
+  const { api: roomApi, state: {roomId, jamRoom} } = getRoomContext();
 
-  let submit: EventHandler = async e => {
-    e.preventDefault();
+  let dynamicConfig: DynamicConfig;
+
+  const createAndEnterRoom = async () => {
     userInteracted.set(true);
-    await $serverApi.createRoom(roomId, newRoom);
+    await $serverApi.createRoom(roomId, dynamicConfig.room);
     await $roomApi.enterRoom();
   };
+
+  const submit: EventHandler = async e => {
+    e.preventDefault();
+    await createAndEnterRoom();
+  };
+
+  $: {
+    if($locationStore) {
+      dynamicConfig = parseUrlConfig($locationStore.search, $locationStore.hash);
+      console.log(dynamicConfig);
+      if (dynamicConfig.ux?.autoCreate) {
+        createAndEnterRoom();
+      }
+    }
+  }
 
 </script>
     <Container>

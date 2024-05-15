@@ -4,7 +4,7 @@ export const switchToNextCamera = async (room: Room) => {
 
     const currentCameraId = room.getActiveDevice("videoinput");
 
-    const devices = await Room.getLocalDevices("videoinput");
+    const devices = await Room.getLocalDevices("videoinput", true);
 
     const currentIndex = devices.findIndex(d => d.deviceId === currentCameraId);
 

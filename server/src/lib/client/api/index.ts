@@ -87,7 +87,7 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
                 await track.mute();
             }
         },
-        toggleCamera: () => room.localParticipant.setCameraEnabled(room.localParticipant.isCameraEnabled),
+        toggleCamera: () => room.localParticipant.setCameraEnabled(!room.localParticipant.isCameraEnabled),
         selectMicrophone: (mic: InputDeviceInfo) => room.switchActiveDevice("audioinput", mic.deviceId),
         startScreenShare: () => room.localParticipant.setScreenShareEnabled(true),
         stopScreenShare: () => room.localParticipant.setScreenShareEnabled(false),
