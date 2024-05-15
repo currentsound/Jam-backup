@@ -159,7 +159,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     const livekitRoomStore = roomListener(livekitRoom);
     const jamRoomStore = roomListener<JamRoom | undefined>(
         livekitRoom,
-        [RoomEvent.RoomMetadataChanged],
+        [RoomEvent.RoomMetadataChanged, RoomEvent.Connected],
         toJamRoom,
         jamRoom
         );
@@ -192,7 +192,8 @@ export const getRoomContext = () => getContext<RoomContext>('room-context');
 
 export const initializeActionsContext = () => setContext('actions', {
     showActions: writable<boolean>(false),
-    showRoleActions: writable<string | undefined>(undefined)
+    showRoleActions: writable<string | undefined>(undefined),
+    showDeviceActions: writable<boolean>(false),
 });
 
 export const getActionsContext = () => getContext<ActionsContext>('actions');

@@ -33,7 +33,6 @@
   $: {
     if($locationStore) {
       dynamicConfig = parseUrlConfig($locationStore.search, $locationStore.hash);
-      console.log(dynamicConfig);
       if (dynamicConfig.ux?.autoCreate) {
         createAndEnterRoom();
       }

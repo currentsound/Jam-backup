@@ -4,6 +4,9 @@ import Connecting from "./Connecting.svelte";
 import RoomHeader from './RoomHeader.svelte';
 import {mqp} from "$lib/client/stores/styles";
 import {getRoomContext, userInteracted, enterOnce} from "$lib/client/stores/room";
+import {locationStore} from "$lib/client/stores/location";
+import {parseUrlConfig} from "$lib/client/utils/url-utils";
+import type {DynamicConfig} from "$lib/types";
 
 const iOS =
   /^iP/.test(navigator.platform) ||
@@ -18,6 +21,7 @@ const forbidden = false;
   const roomColors = $colors;
   const otherDevice = false;
 
+let dynamicConfig: DynamicConfig;
 
 let schedule = room?.schedule
 let fetchingToken = false;
@@ -28,6 +32,17 @@ if($enterOnce) {
   fetchingToken = true;
   $api.enterRoom();
 }
+
+$: {
+  if($locationStore) {
+    dynamicConfig = parseUrlConfig($locationStore.search, $locationStore.hash);
+    if (dynamicConfig.ux?.autoJoin) {
+      fetchingToken = true;
+      $api.enterRoom();
+    }
+  }
+}
+
 
 
 </script>

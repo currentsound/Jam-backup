@@ -2,7 +2,6 @@
     import {getWidth, mqp, setContainerForWidth} from "$lib/client/stores/styles";
     import Modals from './Modals.svelte';
     import {toStyleString} from "$lib/client/utils/css";
-    import {dynamicConfig} from "$lib/client/stores/location";
     import {onMount} from "svelte";
     import {getRoomContext} from "$lib/client/stores/room";
     import StartFromURL from "$lib/components/StartFromURL.svelte";
@@ -17,7 +16,7 @@
 
     onMount(() => setContainerForWidth(container));
 
-    const {state: {roomId, jamRoom, livekitRoom}} = getRoomContext();
+    const {state: {jamRoom, livekitRoom}} = getRoomContext();
 
 </script>
 
