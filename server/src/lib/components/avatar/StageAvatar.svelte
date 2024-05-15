@@ -82,7 +82,7 @@
           >
             <SpeakerRing isSpeaking={isSpeaking} roomColors={$colors} />
             {#if audio}
-              <audio class='hidden' use:srcObject={audio} />
+              <audio class='hidden' use:srcObject={audio} autoplay />
             {/if}
             {#if video && !videoMuted}
               <Video
