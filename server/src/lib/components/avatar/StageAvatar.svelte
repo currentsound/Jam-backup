@@ -11,7 +11,7 @@
   import Reactions from './Reactions.svelte';
   import {MicOffSvg} from '../svg/index';
   import TwitterHandle from './TwitterHandle.svelte';
-  import type {Participant} from "livekit-client";
+  import {type Participant} from "livekit-client";
   import type {IdentityInfo} from "$lib/types";
 
   export let participant: Participant;
@@ -19,7 +19,7 @@
   export let canSpeak: boolean = true;
 
 
-  const {state: {jamRoom, colors}} = getRoomContext();
+  const {state: {jamRoom, colors, livekitRoom}} = getRoomContext();
   const participantContext = getParticipantContext(participant, jamRoom);
 
   let mirror = participant?.isLocal;
@@ -32,6 +32,11 @@
   let moderator: boolean;
   let name: string;
 
+  $livekitRoom.on('activeDeviceChanged', (kind) => {
+    if(kind === "videoinput") {
+      video = $participantContext.cameraTrack?.mediaStream;
+    }
+  }) ;
 
   $: {
     micMuted = !!$participantContext.microphoneTrack?.isMuted;
@@ -69,7 +74,7 @@
                 mirror={mirror}
               />
 
-              {:else}
+            {:else}
               <img
                 class={mqp(
                   'human-radius border border-gray-300 w-20 h-20 md:w-28 md:h-28 object-cover'

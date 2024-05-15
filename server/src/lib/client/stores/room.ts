@@ -11,7 +11,7 @@ import {
     type StaticConfig
 } from "$lib/types";
 import {createRoomApi} from "$lib/client/api";
-import {getMetadata, getMicrophoneTrack, toJamRoom} from "$lib/client/utils/livekit";
+import {getCameraTrack, getMetadata, getMicrophoneTrack, toJamRoom} from "$lib/client/utils/livekit";
 import {identitiesStore} from "$lib/client/stores/identity";
 import {colors} from "$lib/client/utils/theme";
 import {TrackSource} from "livekit-server-sdk";
@@ -78,6 +78,7 @@ export const createParticipantContext = (jamRoom?: JamRoom) => (participant: Par
     const id = participant.identity;
 
     const microphoneTrack = getMicrophoneTrack(participant);
+    const cameraTrack = getCameraTrack(participant);
 
     const microphoneEnabled = !!microphoneTrack;
     const microphoneMuted = !!microphoneTrack?.isMuted;
@@ -88,9 +89,7 @@ export const createParticipantContext = (jamRoom?: JamRoom) => (participant: Par
         info,
         state,
         tracks,
-        cameraTrack: tracks.find(track =>
-                    track.kind === Track.Kind.Video && track.source === Track.Source.Camera
-                ) as Track<Track.Kind.Video> | undefined,
+        cameraTrack,
         microphoneTrack,
         microphoneEnabled,
         microphoneMuted,

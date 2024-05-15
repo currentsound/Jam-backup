@@ -1,14 +1,16 @@
 <script lang="ts">
 
 import Actions from './actions/Actions.svelte';
+import RoleActions from "$lib/components/actions/RoleActions.svelte";
+import DeviceActions from "$lib/components/actions/DeviceActions.svelte";
 import {toStyleString} from '$lib/client/utils/css';
 import {MicOnSvg, MicOffSvg} from './svg';
 import {createParticipantContext, getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {isDark} from "$lib/client/utils/util";
-import RoleActions from "$lib/components/actions/RoleActions.svelte";
 import {dynamicConfig} from "$lib/client/stores/location";
 import {getMicrophoneTrack} from "$lib/client/utils/livekit";
 import {Track} from "livekit-client";
+import EditSvg from "./svg/EditSvg.svelte";
 
 const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
@@ -23,7 +25,7 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
     let showReactions = false;
     let isColorDark = isDark($colors.buttonPrimary);
     let {ux} = $dynamicConfig || {};
-    let {showActions, showRoleActions} = getActionsContext();
+    let {showActions, showRoleActions, showDeviceActions} = getActionsContext();
 
   $: {
       localParticipant = $livekitRoom.localParticipant;
@@ -54,6 +56,7 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
         />
       {/if}
       {#if $showActions} <Actions />{/if}
+        {#if $showDeviceActions} <DeviceActions />{/if}
       <div class="flex flex-wrap space-x-0.5">
         <button
           on:click={speaker ? talk : () => $api.updateState({handRaised: !handRaised})}
@@ -96,10 +99,10 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
               Camera {localParticipant.isCameraEnabled ? 'Off' : 'On'}
             </button>
             <button
-              class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
-              on:click={$api.switchCamera}
+              class="select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
+              on:click={() => showDeviceActions.set(true)}
             >
-              Switch Camera
+                <EditSvg />
             </button>
         {/if}
       </div>

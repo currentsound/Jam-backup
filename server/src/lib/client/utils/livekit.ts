@@ -27,6 +27,15 @@ export const getMicrophoneTrack = (participant: Participant) =>
             track && track.kind === Track.Kind.Audio && track.source === Track.Source.Microphone
         ) as Track<Track.Kind.Audio> | undefined
 
+export const getCameraTrack = (participant: Participant) =>
+    participant
+        .getTrackPublications()
+        .map(tp => tp.track)
+        .find(track =>
+            track && track.kind === Track.Kind.Video && track.source === Track.Source.Camera
+        ) as Track<Track.Kind.Video> | undefined
+
+
 export const getMetadata = (participant: Participant) => pof<ParticipantMetadata, ParticipantMetadata>(
     participantMetadataSchema,
     JSON.parse(participant.metadata || '{}'),

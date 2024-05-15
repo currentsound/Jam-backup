@@ -293,6 +293,7 @@ export interface ServerContext {
 export interface ActionsContext {
     showActions: Writable<boolean>,
     showRoleActions: Writable<string | undefined>,
+    showDeviceActions: Writable<boolean>,
 }
 
 export interface TokenEngine {
