@@ -23,6 +23,7 @@
   const participantContext = getParticipantContext(participant, jamRoom);
 
   let mirror = participant?.isLocal;
+  let playSound = !mirror;
 
   let video: MediaStream | undefined;
   let audio: MediaStream | undefined;
@@ -81,7 +82,7 @@
             class="human-radius p-1 relative flex justify-center"
           >
             <SpeakerRing isSpeaking={isSpeaking} roomColors={$colors} />
-            {#if audio}
+            {#if audio && playSound}
               <audio class='hidden' use:srcObject={audio} autoplay />
             {/if}
             {#if video && !videoMuted}
