@@ -145,9 +145,7 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
 
 
         const shouldHaveCamera = !!livekitRoom.localParticipant.permissions?.canPublishSources.includes(TrackSource.CAMERA);
-        if(shouldHaveCamera) {
-            await livekitRoom.localParticipant.setCameraEnabled(true);
-        } else {
+        if(!shouldHaveCamera) {
             const trackPublication = livekitRoom.localParticipant.getTrackPublication(Track.Source.Camera);
             if(trackPublication?.track) {
                 await livekitRoom.localParticipant.unpublishTrack(trackPublication.track, true);

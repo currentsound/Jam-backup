@@ -172,7 +172,7 @@ export const uxConfigSchema = z.object({
 });
 
 export const dynamicConfigSchema = z.object({
-    room: jamRoomSchema.partial(),
+    room: jamRoomSchema.partial().optional(),
     ux: uxConfigSchema.optional(),
     identity: identityInfoSchema.optional(),
     keys: z.any(),

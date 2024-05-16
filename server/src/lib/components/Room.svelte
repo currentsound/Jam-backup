@@ -9,8 +9,9 @@
   import {mqp} from "$lib/client/stores/styles";
   import {useWakeLock} from "$lib/client/utils/use-wake-lock";
   import {getRoomContext, initializeActionsContext} from "$lib/client/stores/room";
-  import {dynamicConfig} from "$lib/client/stores/location";
+  import {locationStore} from "$lib/client/stores/location";
   import type {LocalParticipant, Participant} from "livekit-client";
+  import {parseUrlConfig} from "$lib/client/utils/url-utils";
 
 
   const inWebView =
@@ -42,6 +43,8 @@
   let stageParticipants: Participant[];
   let audienceParticipants: Participant[];
 
+  let noWebviewWarning: boolean;
+
   $: {
     allParticipants = [...$livekitRoom.remoteParticipants.values()];
     localParticipant = $livekitRoom.localParticipant;
@@ -59,6 +62,8 @@
     audienceParticipants = stageOnly
             ? []
             : allParticipants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
+
+    noWebviewWarning = !!parseUrlConfig($locationStore?.search, $locationStore?.hash).ux?.noWebviewWarning;
   }
 
   const {showActions, showRoleActions} = initializeActionsContext();
@@ -72,7 +77,7 @@
       >
         <div
           class={
-            inWebView && !$dynamicConfig.ux?.noWebviewWarning
+            inWebView && !noWebviewWarning
               ? 'rounded bg-blue-50 border border-blue-150 text-gray-600 ml-2 p-3 mb-3 inline text-center'
               : 'hidden'
           }

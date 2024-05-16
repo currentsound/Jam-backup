@@ -1,8 +1,9 @@
 import {Base64} from "js-base64";
+import type {DynamicConfig} from "$lib/types";
 
 export {parseUrlConfig};
 
-function parseUrlConfig(search: string, hash: string) {
+function parseUrlConfig(search: string, hash: string): DynamicConfig {
   const hashContent = hash.slice(1);
   const queryString = search.slice(1);
 

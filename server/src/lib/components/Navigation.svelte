@@ -7,10 +7,11 @@ import {toStyleString} from '$lib/client/utils/css';
 import {MicOnSvg, MicOffSvg} from './svg';
 import {createParticipantContext, getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {isDark} from "$lib/client/utils/util";
-import {dynamicConfig} from "$lib/client/stores/location";
+import {locationStore} from "$lib/client/stores/location";
 import {getMicrophoneTrack} from "$lib/client/utils/livekit";
 import {Track} from "livekit-client";
 import EditSvg from "./svg/EditSvg.svelte";
+import {parseUrlConfig} from "$lib/client/utils/url-utils";
 
 const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
@@ -24,8 +25,8 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
     let micMuted = false;
     let showReactions = false;
     let isColorDark = isDark($colors.buttonPrimary);
-    let {ux} = $dynamicConfig || {};
     let {showActions, showRoleActions, showDeviceActions} = getActionsContext();
+    let noLeave: boolean;
 
   $: {
       localParticipant = $livekitRoom.localParticipant;
@@ -36,6 +37,8 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
       micMuted = getMicrophoneTrack(localParticipant)?.isMuted ?? true;
       handRaised = me.state.handRaised;
       speaker = me.roles.speaker;
+
+      noLeave = !!parseUrlConfig($locationStore?.search, $locationStore?.hash).ux?.noLeave;
   }
 
   let talk = () => {
@@ -145,7 +148,7 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
         {/if}
 
 
-        {#if !ux?.noLeave }
+        {#if !noLeave }
           <button
             class="flex-shrink ml-3 select-none h-12 px-6 text-lg text-black rounded-lg focus:shadow-outline"
             on:click={$api.leaveRoom}
