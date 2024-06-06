@@ -1,8 +1,8 @@
 import {Endpoint, z} from 'sveltekit-api';
 import {type IdentityInfo, identityInfoSchema} from '$lib/types';
-import { notFound} from "$lib/server/errors";
+import {notFound} from "$lib/server/errors";
 import {roomAccessor} from "$lib/server/handlers/room";
-import { roomServiceClient} from "$lib/server/services/livekit";
+import {roomServiceClient} from "$lib/server/services/livekit";
 
 export const Output = identityInfoSchema.array();
 export const Param = z.object({
@@ -22,5 +22,5 @@ export default new Endpoint({Param, Output, Error }).handle(async (input) => {
         throw notFound();
     }
 
-    return roomServiceClient.listParticipants(input.id).then(ps => ps.map(p => JSON.parse(p.metadata) as IdentityInfo));
+    return await roomServiceClient.listParticipants(input.id).then(ps => ps.map(p => JSON.parse(p.metadata).info as IdentityInfo));
 });
