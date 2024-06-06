@@ -2,7 +2,7 @@ import {
     type DynamicConfig,
     type Identities,
     type IdentityInfo,
-    type JamAccess, type JamMessage, type JamReaction,
+    type JamAccess, type JamReaction,
     type JamRoom, type ParticipantMetadata, participantMetadataSchema, type ParticipantState,
     type RoomAPI, type ServerAPI,
     type StaticConfig
@@ -25,7 +25,7 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
 
     const identity = identities[roomId] ?? identities._default;
 
-    type roomUpdater = (room: JamRoom) => JamRoom;
+    type roomUpdater = (room: JamRoom) => JamRoom
     const updateRoom = async (updater: roomUpdater = room => room) => !!jamRoom && backend.updateRoom(identity, roomId, updater(jamRoom));
 
     const setMetadata = (metadata: ParticipantMetadata) => room.localParticipant.setMetadata(JSON.stringify(metadata));
@@ -39,13 +39,6 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
             }
         })
 
-
-    const sendAndSaveJamMessage = async (message: JamMessage) => {
-        const storedMessage = await backend.saveJamMessage(identity, roomId, message);
-        await sendJamMessage(room, storedMessage);
-        return storedMessage;
-
-    }
 
     return {
         updateRoom: (room: JamRoom) => updateRoom(() => room),
@@ -72,10 +65,10 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
             .then(() => setMetadata({info: identity.info, state: {handRaised: false}})),
         leaveRoom: () => room.disconnect(),
         leaveStage: () => backend.deleteRequest(identity, `/rooms/${roomId}/speakers/${identity.publicKey}`),
-        sendReaction: async (reaction: string) => {
+        sendReaction: (reaction: string) => {
             const reactionObject: JamReaction = {id: uuidv7(), type: 'reaction', reaction};
             addReaction(identity.publicKey, reactionObject, reactions.update);
-            await sendAndSaveJamMessage(reactionObject);
+            return sendJamMessage(room, reactionObject);
         },
         autoJoinOnce: () => {},
         switchCamera: () => switchToNextCamera(room),

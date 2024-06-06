@@ -44,8 +44,7 @@ if(!local) {
   set = async (key: string, value: unknown) => {await getClient().then(c => c.set(key, JSON.stringify(value)))};
   get = async (key: string) => getClient().then(c => c.get(key).then(v => v && JSON.parse(v)));
   del = (key: string) => getClient().then(c => c.del(key).then(() => undefined));
-  list = (prefix: string) => getClient().then(c => c.keys(`${prefix}*`))
-      .then(values => values.map(v => JSON.parse(v)));
+  list = (prefix: string) => getClient().then(c => c.keys(`${prefix}*`));
 }
 
 export {

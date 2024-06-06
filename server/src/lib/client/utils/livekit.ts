@@ -13,12 +13,10 @@ export const toJamRoom = (room: Room) => pou<JamRoom>(
     JSON.parse(room.metadata || '{}')
 );
 
-export const sendJamMessage = async (room: Room, message: JamMessage) => {
-
-    await room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(message)), {
-        destinationIdentities: message.destinationIdentities,
+export const sendJamMessage = (room: Room, message: JamMessage, destinationIdentities?: string[]) =>
+    room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(message)), {
+        destinationIdentities,
     });
-}
 
 
 export const getMicrophoneTrack = (participant: Participant) =>
