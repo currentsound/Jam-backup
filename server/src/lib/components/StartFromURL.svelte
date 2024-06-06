@@ -7,6 +7,7 @@
   import {parseUrlConfig} from "$lib/client/utils/url-utils";
   import type {DynamicConfig} from "$lib/types";
   import {locationStore} from "$lib/client/stores/location";
+  import Connecting from "$lib/components/Connecting.svelte";
 
   const iOS =
     /^iP/.test(navigator.platform) ||
@@ -30,44 +31,48 @@
     await createAndEnterRoom();
   };
 
+  let autoCreate: boolean;
   $: {
     if($locationStore) {
       dynamicConfig = parseUrlConfig($locationStore.search, $locationStore.hash);
       if (dynamicConfig.ux?.autoCreate) {
+        autoCreate = true;
         createAndEnterRoom();
       }
     }
   }
 
 </script>
-    <Container>
-      <code>{JSON.stringify($jamRoom)}</code>
-      <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
-        <h1>Start a Room</h1>
-        <p class="mb-6">
-          The room with ID{' '}
-          <code class="text-gray-900 bg-yellow-100">{roomId}</code> does not
-          exist yet.
-        </p>
+{#if autoCreate}
+  <Connecting />
+{:else}
+  <Container>
+    <div class={mqp('p-2 pt-60 md:p-10 md:pt-60')}>
+      <h1>Start a Room</h1>
+      <p class="mb-6">
+        The room with ID{' '}
+        <code class="text-gray-900 bg-yellow-100">{roomId}</code> does not
+        exist yet.
+      </p>
 
-        <button
-          on:click={submit}
-          class="select-none h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300"
-        >
-          🌱 Start room
-        </button>
+      <button
+        on:click={submit}
+        class="select-none h-12 px-6 text-lg text-black bg-gray-200 rounded-lg focus:shadow-outline active:bg-gray-300"
+      >
+        🌱 Start room
+      </button>
 
-        <div class={iOS ? 'mt-40 text-gray-500 text-center' : 'hidden'}>
-          🎧 Use headphones or earbuds
-          <br />
-          for the best audio experience on iOS
-        </div>
-
-        <div class={macOS ? 'mt-40 text-gray-500 text-center' : 'hidden'}>
-          🎧 Use Chrome or Firefox instead of Safari
-          <br />
-          for the best audio experience on macOS
-        </div>
+      <div class={iOS ? 'mt-40 text-gray-500 text-center' : 'hidden'}>
+        🎧 Use headphones or earbuds
+        <br />
+        for the best audio experience on iOS
       </div>
-    </Container>
 
+      <div class={macOS ? 'mt-40 text-gray-500 text-center' : 'hidden'}>
+        🎧 Use Chrome or Firefox instead of Safari
+        <br />
+        for the best audio experience on macOS
+      </div>
+    </div>
+  </Container>
+{/if}
