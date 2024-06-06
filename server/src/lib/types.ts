@@ -136,16 +136,29 @@ export interface Modal<T extends SvelteComponent = SvelteComponent> {
     props: ComponentProps<T>,
 }
 
-export const jamReactionSchema = z.object({
+const baseJamMessageSchema = z.object({
+    id: z.string().uuid(),
+    destinationIdentities: z.string().array().optional(),
+})
+
+export const jamReactionSchema = baseJamMessageSchema.extend({
         type: z.literal('reaction'),
-        id: z.string().uuid(),
         reaction: z.string(),
     });
 
 export type JamReaction = z.infer<typeof jamReactionSchema>;
 
+export const jamChatSchema = baseJamMessageSchema.extend({
+    type: z.literal('chat'),
+    text: z.string(),
+});
+
+export type JamChat = z.infer<typeof jamChatSchema>;
+
+
 export const jamMessageSchema = z.discriminatedUnion('type', [
     jamReactionSchema,
+    jamChatSchema,
 ])
 
 export type JamMessage = z.infer<typeof jamMessageSchema>;
@@ -306,3 +319,4 @@ export const adminStatusSchema = z.object({
     admin: z.boolean()
 });
 export type AdminStatus = z.infer<typeof adminStatusSchema>;
+

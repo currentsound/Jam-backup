@@ -60,9 +60,14 @@ const updateGrantIfNecessary = async (participant: ParticipantInfo, oldRoom: Jam
 
 }
 
+export const getLivekitRoom = (roomId: string) => roomServiceClient.listRooms([roomId]).then(rooms => rooms[0]);
+
+export const isInRoom = (roomId: string, identity?: IdentityInfo) => roomServiceClient.listParticipants(roomId)
+    .then(participants => !!participants.find(p => identity && p.identity === identity.id))
+
 export const createOrUpdateRoom = async (room: JamRoom) => {
     const metadata = JSON.stringify(room);
-    const existingRoom = await roomServiceClient.listRooms([room.id]).then(rooms => rooms[0]);
+    const existingRoom = await getLivekitRoom(room.id);
 
     const oldJamRoom: JamRoom | undefined = (existingRoom?.metadata && (JSON.parse(existingRoom.metadata) as JamRoom)) || room;
 

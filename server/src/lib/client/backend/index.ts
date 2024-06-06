@@ -1,4 +1,4 @@
-import type {IdentityWithKeys, JamAccess, JamRoom} from "$lib/types";
+import type {IdentityWithKeys, JamAccess, JamMessage, JamRoom} from "$lib/types";
 import {signedToken} from "$lib/common/tokens";
 
 export {
@@ -14,6 +14,7 @@ export {
   getRoom,
   recordingsDownloadLink,
     getToken,
+    saveJamMessage,
 };
 
 const API = '/api/v1';
@@ -32,7 +33,7 @@ async function authenticatedApiRequest(identity: IdentityWithKeys, method: 'GET'
     },
     body: payload ? JSON.stringify(payload) : undefined
   });
-  return res.ok;
+  return res.ok && res.json();
 }
 
 // returns [data, ok, status]
@@ -95,16 +96,15 @@ async function createRoom(identity: IdentityWithKeys, roomId: string, room: Part
     description,
     logoURI,
     color,
-    stageOnly: !!stageOnly,
-    videoCall: !!videoCall,
-    videoEnabled: !!videoEnabled,
+    stageOnly: stageOnly,
+    videoCall: videoCall,
+    videoEnabled: videoEnabled,
     moderators: [identity.info.id],
     speakers: [identity.info.id],
   };
-  let ok = await post(identity, `/rooms/${roomId}`, newRoom);
   //if (ok) populateCache(API + `/rooms/${roomId}`, newRoom);
   // if (ok) setTimeout(() => populateCache(API + `/rooms/${roomId}`, room), 0);
-  return ok;
+  return await post(identity, `/rooms/${roomId}`, newRoom);
 }
 
 async function updateRoom(identity: IdentityWithKeys, roomId: string, room: JamRoom) {
@@ -131,3 +131,12 @@ async function recordingsDownloadLink(identity: IdentityWithKeys, roomId: string
     identity
   )}`;
 }
+
+async function saveJamMessage(identity: IdentityWithKeys, roomId: string, message: JamMessage) {
+  return await post(identity, `/rooms/${roomId}/messages`, message) as JamMessage;
+}
+
+async function getJamMessages(identity: IdentityWithKeys, roomId: string) {
+  return await authedGet(identity, `/rooms/${roomId}/messages`) as JamMessage[];
+}
+
