@@ -8,5 +8,5 @@ export const identityAccessor = accessor<IdentityInfo>({prefix: 'identities'});
 export const identityHandler = controller<IdentityInfo>({
    prefix: 'identities',
    schema: identityInfoSchema,
-   authenticator: identityAuthorizer,
+   authorizer: identityAuthorizer,
 });

@@ -4,12 +4,13 @@ import {roomAuthorizer} from "../authz";
 import {createOrUpdateRoom} from "$lib/server/services/livekit";
 import {forbidden, notFound} from "$lib/server/errors";
 import type {RequestEvent} from "@sveltejs/kit";
+import {z} from "sveltekit-api";
 
 
 export const roomAccessor = accessor<JamRoom>({prefix: 'rooms'});
 export const roomHandler = controller<JamRoom>({
    prefix: 'rooms',
-   schema: jamRoomSchema,
+   schema: jamRoomSchema as z.ZodType<JamRoom>,
    authorizer: roomAuthorizer,
    broadcastRoom: (id) => id,
    broadcastChannel: () => 'room-info',

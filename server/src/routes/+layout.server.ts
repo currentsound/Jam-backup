@@ -1,4 +1,3 @@
-import type {RequestEvent} from "@sveltejs/kit";
 import type {StaticConfig, RoomOptions} from "$lib/types";
 import {livekitUrl} from "$lib/server/config";
 
@@ -17,9 +16,6 @@ export const load = async (): Promise<{jamConfig: StaticConfig}> => ({
     jamConfig: {
         defaultRoom: {
             name: "",
-            speakers: [],
-            moderators: [],
-            presenters: []
         },
         livekit: {
             url: livekitUrl,

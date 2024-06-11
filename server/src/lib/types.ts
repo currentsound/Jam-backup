@@ -4,6 +4,9 @@ import type {ComponentProps, ComponentType, SvelteComponent} from "svelte";
 import type {Readable, Writable} from "svelte/store";
 import {LocalTrackPublication, type Participant, Room as ClientRoom, type Track} from "livekit-client";
 
+const paramToBoolean = z.union([z.boolean(), z.string(), z.undefined()])
+    .transform(v => !(v === 'false' || v === 'false' || !v));
+
 export const accessSchema = z.object({
     identities: z.string().array().optional(),
     identitiesLocked: z.boolean().optional(),
@@ -69,16 +72,16 @@ export const jamRoomSchema = z.object({
     speakers: z.string().array(),
     moderators: z.string().array(),
     presenters: z.string().array(),
-    videoEnabled: z.boolean().optional(),
-    stageOnly: z.boolean().optional(),
-    videoCall: z.boolean().optional(),
+    videoEnabled: paramToBoolean,
+    stageOnly: paramToBoolean,
+    videoCall: paramToBoolean,
     color: z.string().optional(),
     logoURI: z.string().url().optional(),
     buttonURI: z.string().url().optional(),
     buttonText: z.string().url().optional(),
     shareUrl: z.string().url().optional(),
     access: accessSchema.optional(),
-    broadcastRoom: z.boolean().optional(),
+    broadcastRoom: paramToBoolean,
     userDisplay: z.object({
         identities: z.record(identityInfoSchema),
         avatars: z.record(z.string()),
@@ -90,7 +93,7 @@ export const jamRoomSchema = z.object({
     theme: z.object({
         colors: colorsSchema.optional()
     }).optional(),
-    closed: z.boolean().optional(),
+    closed: paramToBoolean,
     schedule: jamScheduleSchema.optional(),
 }).openapi('JamRoom');
 
@@ -163,18 +166,18 @@ export const participantMetadataSchema = z.object({
 export type ParticipantMetadata = z.infer<typeof participantMetadataSchema>;
 
 export const uxConfigSchema = z.object({
-    autoJoin: z.boolean().optional(),
-    autoRejoin: z.boolean().optional(),
-    autoCreate: z.boolean().optional(),
-    userInteracted: z.boolean().optional(),
-    noWebviewWarning: z.boolean().optional(),
-    noLeave: z.boolean().optional(),
+    autoJoin: paramToBoolean,
+    autoRejoin: paramToBoolean,
+    autoCreate: paramToBoolean,
+    userInteracted: paramToBoolean,
+    noWebviewWarning: paramToBoolean,
+    noLeave: paramToBoolean,
 });
 
 export const dynamicConfigSchema = z.object({
     room: jamRoomSchema.partial().optional(),
     ux: uxConfigSchema.optional(),
-    identity: identityInfoSchema.optional(),
+    identity: identityInfoSchema.partial().optional(),
     keys: z.any(),
 })
 
@@ -218,6 +221,7 @@ export const roomDataSchema = z.object({
 export type RoomData = z.infer<typeof roomDataSchema>;
 
 export interface RoomAPI {
+    createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) => Promise<boolean>,
     updateRoom: (room: JamRoom) => Promise<boolean>,
     getDisplayName: (info: IdentityInfo) => string | undefined,
     addSpeaker: (participantId: string) => Promise<boolean>,
@@ -248,7 +252,6 @@ export interface RoomAPI {
 }
 
 export interface ServerAPI {
-    createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) => Promise<boolean>,
     getRoom: (roomId: string) => Promise<JamRoom>,
     isAdmin: (participantId: string) => Promise<boolean>,
     addAdmin: (participantId: string) => Promise<boolean>,
@@ -277,6 +280,7 @@ export interface ParticipantContext {
 export interface RoomContext {
     state: {
         roomId: string,
+        dynamicConfig: DynamicConfig,
         livekitRoom: Readable<ClientRoom>,
         jamRoom: Readable<JamRoom | undefined>,
         colors: Readable<CompletedJamRoomColors>,

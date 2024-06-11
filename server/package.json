@@ -46,6 +46,7 @@
 		"sveltekit-api": "^0.5.3",
 		"tslib": "^2.4.1",
 		"tweetnacl": "^1.0.3",
+		"type-fest": "^4.20.0",
 		"typescript": "^5.0.0",
 		"ua-parser-js": "^1.0.37",
 		"uuidv7": "^0.6.3",

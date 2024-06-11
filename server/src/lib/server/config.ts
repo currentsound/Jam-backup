@@ -16,5 +16,3 @@ export const recordFileRetentionDays = process.env.RECORD_FILE_RETENTION_DAYS
 export const livekitUrl = process.env.LIVEKIT_URL || 'https://demo.jamrelay.cloud';
 export const livekitKey = process.env.LIVEKIT_KEY;
 export const livekitSecret = process.env.LIVEKIT_SECRET;
-
-console.log(livekitKey, livekitSecret);
