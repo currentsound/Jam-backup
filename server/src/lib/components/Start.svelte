@@ -10,12 +10,12 @@
     import {toStyleString} from "$lib/client/utils/css";
     import {onMount} from "svelte";
     import * as backend from "$lib/client/backend";
-    import {identitiesStore} from "$lib/client/stores/identity";
+    import {defaultIdentity} from "$lib/client/stores/identity";
 
     export let newRoom: Partial<JamRoom> = {stageOnly: false, videoEnabled: false};
     export let roomFromURIError = false;
 
-    const {config, api} = getServerContext();
+    const {config} = getServerContext();
 
     const width = getWidth();
     let container: HTMLElement;
@@ -33,7 +33,7 @@
                 stageOnly,
                 videoEnabled,
             };
-            let ok = await backend.createRoom($identitiesStore._default, roomId, roomPosted);
+            let ok = await backend.createRoom(defaultIdentity(), roomId, roomPosted);
             if (ok) {
                 await goto('/' + roomId);
             }

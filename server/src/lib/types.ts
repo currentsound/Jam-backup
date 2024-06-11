@@ -291,7 +291,7 @@ export interface RoomContext {
 
 export interface ServerContext {
     config: StaticConfig,
-    api: Readable<ServerAPI>,
+    api: ServerAPI,
 }
 
 export interface ActionsContext {

@@ -12,7 +12,6 @@ import {
 } from "$lib/types";
 import {createRoomApi} from "$lib/client/api";
 import {getCameraTrack, getMetadata, getMicrophoneTrack, toJamRoom} from "$lib/client/utils/livekit";
-import {identitiesStore, importRoomIdentity} from "$lib/client/stores/identity";
 import {colors} from "$lib/client/utils/theme";
 import {TrackSource} from "livekit-server-sdk";
 
@@ -136,10 +135,6 @@ export const initializeRoomContext = (
 
     const livekitRoom = new Room(jamConfig.livekit.roomOptions);
 
-    if(dynamicConfig.identity) {
-        importRoomIdentity(roomId, {info: dynamicConfig.identity}).then();
-    }
-
     livekitRoom.localParticipant.on('participantPermissionsChanged', async () => {
         const shouldHaveMicrophone = !!livekitRoom.localParticipant.permissions?.canPublishSources.includes(TrackSource.MICROPHONE);
         if(shouldHaveMicrophone) {
@@ -172,9 +167,9 @@ export const initializeRoomContext = (
     const reactions = getReactions(livekitRoom);
 
     const api = derived(
-        [livekitRoomStore, identitiesStore, jamRoomStore],
-        ([$room, $identities, $jamRoom]) =>
-            createRoomApi(jamConfig, dynamicConfig, roomId, $room, $identities, $jamRoom, reactions));
+        [livekitRoomStore, jamRoomStore],
+        ([$room, $jamRoom]) =>
+            createRoomApi(jamConfig, dynamicConfig, roomId, $room, $jamRoom, reactions));
 
 
 

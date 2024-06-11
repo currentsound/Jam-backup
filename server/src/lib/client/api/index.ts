@@ -1,6 +1,5 @@
 import {
     type DynamicConfig,
-    type Identities,
     type IdentityInfo,
     type JamAccess, type JamReaction,
     type JamRoom, type ParticipantMetadata, participantMetadataSchema, type ParticipantState,
@@ -8,7 +7,7 @@ import {
     type StaticConfig
 } from "$lib/types";
 import {LocalTrack, type Room} from "livekit-client";
-import {updateIdentity} from "$lib/client/stores/identity";
+import {defaultIdentity, identityForRoom, importRoomIdentity, updateIdentity} from "$lib/client/stores/identity";
 import {getMicrophoneTrack, sendJamMessage} from "$lib/client/utils/livekit";
 import * as backend from "$lib/client/backend";
 import {displayName} from "$lib/client/utils/avatar";
@@ -21,9 +20,10 @@ import {addReaction} from "$lib/client/stores/room";
 
 
 
-export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: DynamicConfig, roomId: string, room: Room, identities: Identities, jamRoom: JamRoom | undefined, reactions: Writable<Record<string, JamReaction[]>>): RoomAPI => {
 
-    const identity = () => identities[roomId] ?? identities._default;
+export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: DynamicConfig, roomId: string, room: Room, jamRoom: JamRoom | undefined, reactions: Writable<Record<string, JamReaction[]>>): RoomAPI => {
+
+    const identity = () => identityForRoom(roomId);
 
     type roomUpdater = (room: JamRoom) => JamRoom
     const updateRoom = async (updater: roomUpdater = room => room) => !!jamRoom && backend.updateRoom(identity(), roomId, updater(jamRoom));
@@ -39,10 +39,18 @@ export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: Dynamic
             }
         })
 
+    const importRoomIdentityIfNeeded = () =>
+        dynamicConfig.identity ?
+            importRoomIdentity(roomId, {info: dynamicConfig.identity})
+            :
+            Promise.resolve(true);
+
 
     return {
         createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) =>
-            backend.createRoom(
+            importRoomIdentityIfNeeded()
+                .then(() => identityForRoom(roomId))
+                .then(() => backend.createRoom(
                 identity(),
                 roomId,
                 {
@@ -50,7 +58,7 @@ export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: Dynamic
                     ...dynamicConfig.room,
                     ...partialRoom,
                     id: roomId
-                }),
+                })),
         updateRoom: (room: JamRoom) => updateRoom(() => room),
         getDisplayName: (info: IdentityInfo) => displayName(info, jamRoom),
         addSpeaker: (participantId: string) => updateRoom((room) => ({...room, speakers: [...room.speakers, participantId]})),
@@ -69,10 +77,10 @@ export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: Dynamic
             const {info, state} = getMetadata();
             setMetadata({info , state: {...state, ...stateUpdate}});
         },
-        enterRoom: () => backend
+        enterRoom: () => importRoomIdentityIfNeeded().then(() => backend
             .getToken(identity(), roomId)
             .then((result: JamAccess | undefined) => result && room.connect(result.livekitUrl, result.token, {}))
-            .then(() => setMetadata({info: identity().info, state: {handRaised: false}})),
+            .then(() => setMetadata({info: identity().info, state: {handRaised: false}}))),
         leaveRoom: () => room.disconnect(),
         leaveStage: () => backend.deleteRequest(identity(), `/rooms/${roomId}/speakers/${identity().publicKey}`),
         sendReaction: (reaction: string) => {
@@ -103,13 +111,12 @@ export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: Dynamic
     };
 }
 
-export const createServerApi = (identities: Identities): ServerAPI => {
-        const identity = identities._default;
+export const createServerApi = (): ServerAPI => {
 
         return {
             getRoom: (roomId: string) => backend.getRoom(roomId),
-            isAdmin: (participantId: string) => isAdmin(identity, participantId),
-            addAdmin: (participantId: string) => addAdmin(identity, participantId),
-            removeAdmin: (participantId: string) => removeAdmin(identity, participantId),
+            isAdmin: (participantId: string) => isAdmin(defaultIdentity(), participantId),
+            addAdmin: (participantId: string) => addAdmin(defaultIdentity(), participantId),
+            removeAdmin: (participantId: string) => removeAdmin(defaultIdentity(), participantId),
         };
 }

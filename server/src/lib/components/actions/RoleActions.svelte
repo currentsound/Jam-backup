@@ -16,7 +16,7 @@
   let {removeSpeaker, addSpeaker, removeModerator, addModerator} = $roomApi;
 
   const {api: serverApi} = getServerContext();
-  let {isAdmin, addAdmin, removeAdmin} = $serverApi;
+  let {isAdmin, addAdmin, removeAdmin} = serverApi;
 
 
   const myId = $livekitRoom.localParticipant.identity;

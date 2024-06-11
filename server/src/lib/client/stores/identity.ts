@@ -1,16 +1,17 @@
 import {keyPairFromSecretKey, keyPairFromSeed, newKeyPair} from 'watsign';
 import {putOrPost} from '$lib/client/backend';
-import {persisted} from "svelte-persisted-store";
 import type {Identities, IdentityInfo, IdentityWithKeys} from "$lib/types";
-import {derived, get, type Stores} from "svelte/store";
 import {Base64} from "js-base64";
 import type {PartialDeep} from "type-fest";
+
+const identities = () => JSON.parse(localStorage.getItem('identities') ?? '{}') as Identities;
+const store = (identities: Identities) => localStorage.setItem('identities', JSON.stringify(identities));
 
 
 const isDefault = (identity: IdentityWithKeys, identities: Identities) =>
     !identities?._default || identities._default?.publicKey === identity.publicKey;
 
-export const identitiesStore = persisted<Identities>('identities', {});
+export const defaultIdentity = () => identities()._default;
 
 export const uploadIdentity = (identity: IdentityWithKeys) => putOrPost(
       identity,
@@ -19,10 +20,11 @@ export const uploadIdentity = (identity: IdentityWithKeys) => putOrPost(
   );
 
 export const updateIdentity = (roomId: string, identity: IdentityWithKeys) => {
-  identitiesStore.update((identities) => ({
-    ...identities,
-    [isDefault(identity, identities) ? '_default' : roomId]: identity
-  }));
+  const oldIdentities = identities();
+  store({
+    ...oldIdentities,
+    [isDefault(identity, oldIdentities) ? '_default' : roomId]: identity
+  });
 
   return uploadIdentity(identity);
 
@@ -31,20 +33,17 @@ export const updateIdentity = (roomId: string, identity: IdentityWithKeys) => {
 
 const createDefaultIdentityIfNeeded = async () => {
 
-  if (!get(identitiesStore)?._default) {
+  if (!identities()._default) {
     const defaultIdentity = await createIdentity();
     await updateIdentity('_default', defaultIdentity);
     return defaultIdentity;
   } else {
-    return get(identitiesStore)._default;
+    return identities()._default;
   }
 };
 
-export const identityForRoom = (roomId: string) => derived<Stores, IdentityWithKeys>(identitiesStore, $identities =>
-    $identities[roomId] ?? $identities._default);
+export const identityForRoom = (roomId: string) => identities()[roomId] ?? identities()._default;
 
-const setCurrentIdentity = (roomId: string, identity: IdentityWithKeys) => identitiesStore.update((identities) =>
-  ({...identities, [identities[roomId] ? roomId : '_default']: identity}));
 
 async function importDefaultIdentity(
   identity: Partial<IdentityWithKeys> & {seed?: string}
@@ -57,7 +56,7 @@ export async function importRoomIdentity(
   identity: PartialDeep<IdentityWithKeys> & {seed?: string}
 ) {
   let fullIdentity: IdentityWithKeys;
-  let existingIdentity = get(identitiesStore)[roomId];
+  let existingIdentity = identities()[roomId];
   if (identity.privateKey && identity.publicKey) {
     fullIdentity = {
       publicKey: identity.publicKey,
