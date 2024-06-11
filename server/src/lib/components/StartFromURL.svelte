@@ -3,10 +3,6 @@
   import {mqp} from "$lib/client/stores/styles";
   import {getRoomContext, userInteracted} from "$lib/client/stores/room";
   import type {EventHandler} from "svelte/elements";
-  import {getServerContext} from "$lib/client/stores/server";
-  import {parseUrlConfig} from "$lib/client/utils/url-utils";
-  import type {DynamicConfig} from "$lib/types";
-  import {locationStore} from "$lib/client/stores/location";
   import Connecting from "$lib/components/Connecting.svelte";
 
   const iOS =
@@ -15,14 +11,11 @@
 
   const macOS = /^Mac/.test(navigator.platform) && navigator.maxTouchPoints === 0;
 
-  const { api: serverApi } = getServerContext();
-  const { api: roomApi, state: {roomId, jamRoom} } = getRoomContext();
-
-  let dynamicConfig: DynamicConfig;
+  const { api: roomApi, state: {dynamicConfig, roomId} } = getRoomContext();
 
   const createAndEnterRoom = async () => {
     userInteracted.set(true);
-    await $serverApi.createRoom(roomId, dynamicConfig.room);
+    await $roomApi.createRoom(roomId);
     await $roomApi.enterRoom();
   };
 
@@ -31,15 +24,9 @@
     await createAndEnterRoom();
   };
 
-  let autoCreate: boolean;
-  $: {
-    if($locationStore) {
-      dynamicConfig = parseUrlConfig($locationStore.search, $locationStore.hash);
-      if (dynamicConfig.ux?.autoCreate) {
-        autoCreate = true;
-        createAndEnterRoom();
-      }
-    }
+  const {autoCreate} = dynamicConfig.ux || {};
+  if (autoCreate) {
+    createAndEnterRoom();
   }
 
 </script>

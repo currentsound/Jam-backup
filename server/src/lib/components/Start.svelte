@@ -9,6 +9,8 @@
     import {getWidth, mqp, setContainerForWidth} from "$lib/client/stores/styles";
     import {toStyleString} from "$lib/client/utils/css";
     import {onMount} from "svelte";
+    import * as backend from "$lib/client/backend";
+    import {identitiesStore} from "$lib/client/stores/identity";
 
     export let newRoom: Partial<JamRoom> = {stageOnly: false, videoEnabled: false};
     export let roomFromURIError = false;
@@ -31,7 +33,7 @@
                 stageOnly,
                 videoEnabled,
             };
-            let ok = await $api.createRoom(roomId, roomPosted);
+            let ok = await backend.createRoom($identitiesStore._default, roomId, roomPosted);
             if (ok) {
                 await goto('/' + roomId);
             }

@@ -4,6 +4,7 @@ import {persisted} from "svelte-persisted-store";
 import type {Identities, IdentityInfo, IdentityWithKeys} from "$lib/types";
 import {derived, get, type Stores} from "svelte/store";
 import {Base64} from "js-base64";
+import type {PartialDeep} from "type-fest";
 
 
 const isDefault = (identity: IdentityWithKeys, identities: Identities) =>
@@ -51,9 +52,9 @@ async function importDefaultIdentity(
   await importRoomIdentity('_default', identity);
 }
 
-async function importRoomIdentity(
+export async function importRoomIdentity(
   roomId: string,
-  identity: Partial<IdentityWithKeys> & {seed?: string}
+  identity: PartialDeep<IdentityWithKeys> & {seed?: string}
 ) {
   let fullIdentity: IdentityWithKeys;
   let existingIdentity = get(identitiesStore)[roomId];
@@ -85,7 +86,7 @@ async function importRoomIdentity(
 }
 
 async function createIdentityFromSecretKey(
-  info: IdentityInfo | undefined,
+  info: PartialDeep<IdentityInfo> | undefined,
   privatekeyBase64: string
 ) {
   const keypair = await keyPairFromSecretKey(Base64.toUint8Array(privatekeyBase64));
@@ -93,7 +94,7 @@ async function createIdentityFromSecretKey(
 }
 
 async function createIdentityFromSeed(
-  info: IdentityInfo | undefined,
+  info: PartialDeep<IdentityInfo> | undefined,
   seedString: string
 ) {
   const hash = new Uint8Array(
@@ -103,13 +104,13 @@ async function createIdentityFromSeed(
   return createIdentityFromKeypair(info, keypair);
 }
 
-async function createIdentity(info?: IdentityInfo) {
+async function createIdentity(info?: PartialDeep<IdentityInfo>) {
   const keypair = await newKeyPair();
   return createIdentityFromKeypair(info, keypair);
 }
 
 function createIdentityFromKeypair(
-  info: IdentityInfo | undefined,
+  info: PartialDeep<IdentityInfo> | undefined,
   keypair: {secretKey: Uint8Array; publicKey: Uint8Array}
 ) {
   const publicKey = Base64.fromUint8Array(keypair.publicKey, true);

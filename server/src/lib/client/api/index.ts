@@ -21,19 +21,19 @@ import {addReaction} from "$lib/client/stores/room";
 
 
 
-export const createRoomApi = (roomId: string, room: Room, identities: Identities, jamRoom: JamRoom | undefined, reactions: Writable<Record<string, JamReaction[]>>): RoomAPI => {
+export const createRoomApi = (staticConfig: StaticConfig, dynamicConfig: DynamicConfig, roomId: string, room: Room, identities: Identities, jamRoom: JamRoom | undefined, reactions: Writable<Record<string, JamReaction[]>>): RoomAPI => {
 
-    const identity = identities[roomId] ?? identities._default;
+    const identity = () => identities[roomId] ?? identities._default;
 
     type roomUpdater = (room: JamRoom) => JamRoom
-    const updateRoom = async (updater: roomUpdater = room => room) => !!jamRoom && backend.updateRoom(identity, roomId, updater(jamRoom));
+    const updateRoom = async (updater: roomUpdater = room => room) => !!jamRoom && backend.updateRoom(identity(), roomId, updater(jamRoom));
 
     const setMetadata = (metadata: ParticipantMetadata) => room.localParticipant.setMetadata(JSON.stringify(metadata));
     const getMetadata = () => pof<ParticipantMetadata, ParticipantMetadata>(
         participantMetadataSchema,
         JSON.parse(room.localParticipant.metadata || '{}'),
         {
-            info: identity.info,
+            info: identity().info,
             state: {
                 handRaised: false,
             }
@@ -41,6 +41,16 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
 
 
     return {
+        createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) =>
+            backend.createRoom(
+                identity(),
+                roomId,
+                {
+                    ...staticConfig.defaultRoom,
+                    ...dynamicConfig.room,
+                    ...partialRoom,
+                    id: roomId
+                }),
         updateRoom: (room: JamRoom) => updateRoom(() => room),
         getDisplayName: (info: IdentityInfo) => displayName(info, jamRoom),
         addSpeaker: (participantId: string) => updateRoom((room) => ({...room, speakers: [...room.speakers, participantId]})),
@@ -50,24 +60,24 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
         removeModerator: (participantId: string) => updateRoom((room) => ({...room, moderators: room.moderators.filter(id => id != participantId)})),
         removePresenter: (participantId: string) => updateRoom((room) => ({...room, presenters: room.presenters.filter(id => id != participantId)})),
         updateInfo: (info: IdentityInfo) => {
-            console.log(info);
-            identity.info = info;
+            const newIdentity = identity();
+            newIdentity.info = info;
             setMetadata({...getMetadata(), info})
-            return updateIdentity(roomId, identity);
+            return updateIdentity(roomId, newIdentity);
         },
         updateState: (stateUpdate: Partial<ParticipantState>) => {
             const {info, state} = getMetadata();
             setMetadata({info , state: {...state, ...stateUpdate}});
         },
         enterRoom: () => backend
-            .getToken(identity, roomId)
+            .getToken(identity(), roomId)
             .then((result: JamAccess | undefined) => result && room.connect(result.livekitUrl, result.token, {}))
-            .then(() => setMetadata({info: identity.info, state: {handRaised: false}})),
+            .then(() => setMetadata({info: identity().info, state: {handRaised: false}})),
         leaveRoom: () => room.disconnect(),
-        leaveStage: () => backend.deleteRequest(identity, `/rooms/${roomId}/speakers/${identity.publicKey}`),
+        leaveStage: () => backend.deleteRequest(identity(), `/rooms/${roomId}/speakers/${identity().publicKey}`),
         sendReaction: (reaction: string) => {
             const reactionObject: JamReaction = {id: uuidv7(), type: 'reaction', reaction};
-            addReaction(identity.publicKey, reactionObject, reactions.update);
+            addReaction(identity().publicKey, reactionObject, reactions.update);
             return sendJamMessage(room, reactionObject);
         },
         autoJoinOnce: () => {},
@@ -93,20 +103,10 @@ export const createRoomApi = (roomId: string, room: Room, identities: Identities
     };
 }
 
-export const createServerApi = (identities: Identities, dynamicConfig: DynamicConfig, jamConfig: StaticConfig): ServerAPI => {
+export const createServerApi = (identities: Identities): ServerAPI => {
         const identity = identities._default;
 
         return {
-            createRoom: (roomId: string, partialRoom?: Partial<JamRoom>) =>
-                backend.createRoom(
-                    identity,
-                    roomId,
-                    {
-                        ...jamConfig.defaultRoom,
-                        ...dynamicConfig.room,
-                        ...partialRoom,
-                        id: roomId
-                    }),
             getRoom: (roomId: string) => backend.getRoom(roomId),
             isAdmin: (participantId: string) => isAdmin(identity, participantId),
             addAdmin: (participantId: string) => addAdmin(identity, participantId),

@@ -2,7 +2,7 @@ import {Participant, ParticipantEvent, Room, RoomEvent, Track} from "livekit-cli
 import {derived, type Readable, readable, readonly, type Stores, type Updater, writable} from "svelte/store";
 import {getContext, setContext} from "svelte";
 import {
-    type ActionsContext,
+    type ActionsContext, type DynamicConfig,
     type JamMessage,
     type JamReaction,
     type JamRoom,
@@ -12,7 +12,7 @@ import {
 } from "$lib/types";
 import {createRoomApi} from "$lib/client/api";
 import {getCameraTrack, getMetadata, getMicrophoneTrack, toJamRoom} from "$lib/client/utils/livekit";
-import {identitiesStore} from "$lib/client/stores/identity";
+import {identitiesStore, importRoomIdentity} from "$lib/client/stores/identity";
 import {colors} from "$lib/client/utils/theme";
 import {TrackSource} from "livekit-server-sdk";
 
@@ -124,12 +124,20 @@ export const getParticipantContext = (participant: Participant, jamRoomStore: Re
     }
 })
 
-export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, jamRoom: JamRoom | undefined) => {
-
-    const livekitRoom = new Room(jamConfig.livekit.roomOptions);
+export const initializeRoomContext = (
+    roomId: string,
+    jamConfig: StaticConfig,
+    jamRoom: JamRoom | undefined,
+    dynamicConfig: DynamicConfig) => {
 
     if(getContext('room-context')) {
         throw new Error('Cannot reinitialize room context');
+    }
+
+    const livekitRoom = new Room(jamConfig.livekit.roomOptions);
+
+    if(dynamicConfig.identity) {
+        importRoomIdentity(roomId, {info: dynamicConfig.identity}).then();
     }
 
     livekitRoom.localParticipant.on('participantPermissionsChanged', async () => {
@@ -166,13 +174,14 @@ export const initializeRoomContext = (roomId: string, jamConfig: StaticConfig, j
     const api = derived(
         [livekitRoomStore, identitiesStore, jamRoomStore],
         ([$room, $identities, $jamRoom]) =>
-            createRoomApi(roomId, $room, $identities, $jamRoom, reactions));
+            createRoomApi(jamConfig, dynamicConfig, roomId, $room, $identities, $jamRoom, reactions));
 
 
 
     const context: RoomContext = {
         state: {
             roomId,
+            dynamicConfig,
             livekitRoom: livekitRoomStore,
             jamRoom: jamRoomStore,
             colors: derived(jamRoomStore, ($jamRoom) => colors($jamRoom)),

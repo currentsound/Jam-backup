@@ -7,16 +7,14 @@ import {toStyleString} from '$lib/client/utils/css';
 import {MicOnSvg, MicOffSvg} from './svg';
 import {createParticipantContext, getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {isDark} from "$lib/client/utils/util";
-import {locationStore} from "$lib/client/stores/location";
 import {getMicrophoneTrack} from "$lib/client/utils/livekit";
 import {Track} from "livekit-client";
 import EditSvg from "./svg/EditSvg.svelte";
-import {parseUrlConfig} from "$lib/client/utils/url-utils";
 
 const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
 
-    let {state: {livekitRoom, jamRoom, colors}, api} = getRoomContext();
+    let {state: {livekitRoom, jamRoom, colors, dynamicConfig}, api} = getRoomContext();
 
     let localParticipant = $livekitRoom.localParticipant;
     let speaker = false;
@@ -38,7 +36,7 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
       handRaised = me.state.handRaised;
       speaker = me.roles.speaker;
 
-      noLeave = !!parseUrlConfig($locationStore?.search, $locationStore?.hash).ux?.noLeave;
+      noLeave = !!dynamicConfig.ux?.noLeave;
   }
 
   let talk = () => {

@@ -87,6 +87,9 @@ async function createRoom(identity: IdentityWithKeys, roomId: string, room: Part
     stageOnly = false,
     videoCall = false,
     videoEnabled = false,
+    moderators = [identity.info.id],
+    speakers =  [identity.info.id],
+    presenters =  [identity.info.id],
   } = room;
 
   let newRoom = {
@@ -95,11 +98,12 @@ async function createRoom(identity: IdentityWithKeys, roomId: string, room: Part
     description,
     logoURI,
     color,
-    stageOnly: !!stageOnly,
-    videoCall: !!videoCall,
-    videoEnabled: !!videoEnabled,
-    moderators: [identity.info.id],
-    speakers: [identity.info.id],
+    stageOnly,
+    videoCall,
+    videoEnabled,
+    moderators,
+    speakers,
+    presenters,
   };
   let ok = await post(identity, `/rooms/${roomId}`, newRoom);
   //if (ok) populateCache(API + `/rooms/${roomId}`, newRoom);

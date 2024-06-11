@@ -9,10 +9,7 @@
   import {mqp} from "$lib/client/stores/styles";
   import {useWakeLock} from "$lib/client/utils/use-wake-lock";
   import {getRoomContext, initializeActionsContext} from "$lib/client/stores/room";
-  import {locationStore} from "$lib/client/stores/location";
   import type {LocalParticipant, Participant} from "livekit-client";
-  import {parseUrlConfig} from "$lib/client/utils/url-utils";
-
 
   const inWebView =
     userAgent.browser?.name !== 'JamWebView' &&
@@ -21,7 +18,7 @@
         userAgent.browser?.name !== 'Mobile Safari'));
 
 
-  const {state: {livekitRoom, jamRoom, colors}} = getRoomContext();
+  const {state: {livekitRoom, jamRoom, colors, dynamicConfig}} = getRoomContext();
 
   useWakeLock();
   usePushToTalk();
@@ -63,7 +60,7 @@
             ? []
             : allParticipants.filter(p => !stageParticipants.map(p => p.identity).includes(p.identity));
 
-    noWebviewWarning = !!parseUrlConfig($locationStore?.search, $locationStore?.hash).ux?.noWebviewWarning;
+    noWebviewWarning = !!dynamicConfig.ux?.noWebviewWarning;
   }
 
   const {showActions, showRoleActions} = initializeActionsContext();

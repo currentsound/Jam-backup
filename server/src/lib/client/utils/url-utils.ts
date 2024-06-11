@@ -1,5 +1,6 @@
 import {Base64} from "js-base64";
-import type {DynamicConfig} from "$lib/types";
+import {type DynamicConfig, dynamicConfigSchema} from "$lib/types";
+import {z} from "sveltekit-api";
 
 export {parseUrlConfig};
 
@@ -16,6 +17,14 @@ function parseUrlConfig(search: string, hash: string): DynamicConfig {
   }
 
   if (queryString) {
+    try {
+      dynamicConfigSchema.parse(parseParams(queryString));
+    } catch (e) {
+      if(e instanceof z.ZodError) {
+        console.log(e.toString());
+      }
+      console.log(e);
+    }
     return parseParams(queryString);
   }
 
