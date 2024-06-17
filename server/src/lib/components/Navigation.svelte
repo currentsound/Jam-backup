@@ -4,15 +4,17 @@ import Actions from './actions/Actions.svelte';
 import RoleActions from "$lib/components/actions/RoleActions.svelte";
 import DeviceActions from "$lib/components/actions/DeviceActions.svelte";
 import {toStyleString} from '$lib/client/utils/css';
-import {MicOnSvg, MicOffSvg} from './svg';
+import {MicOnSvg, MicOffSvg, CamOffSvg, CamOnSvg} from './svg';
 import {createParticipantContext, getActionsContext, getRoomContext} from "$lib/client/stores/room";
 import {isDark} from "$lib/client/utils/util";
 import {getMicrophoneTrack} from "$lib/client/utils/livekit";
 import {Track} from "livekit-client";
 import EditSvg from "./svg/EditSvg.svelte";
+import {getWidth, mediaQuery} from "$lib/client/stores/styles";
 
 const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
 
+    const width = getWidth();
 
     let {state: {livekitRoom, jamRoom, colors, dynamicConfig}, api} = getRoomContext();
 
@@ -74,13 +76,13 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
                     stroke={$colors.buttonPrimary}
                   />
-                  &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;off
+                  {mediaQuery($width, 'md', '', `microphone is off`)}
               {:else if micOn && !micMuted}
                   <MicOnSvg
                     className="w-5 h-5 mr-2 opacity-80 inline-block"
                     stroke={$colors.buttonPrimary}
                   />
-                  &nbsp;Your&nbsp;microphone&nbsp;is&nbsp;on
+                  {mediaQuery($width, 'md', '', `microphone is on`)}
               {:else if !micOn}
                 Allow&nbsp;microphone&nbsp;access
               {/if}
@@ -97,7 +99,18 @@ const reactionEmojis = ['❤️', '💯', '😂', '😅', '😳', '🤔'];
               class="flex-grow select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"
               on:click={() => $api.toggleCamera()}
             >
-              Camera {localParticipant.isCameraEnabled ? 'Off' : 'On'}
+                {#if localParticipant.isCameraEnabled}
+                <CamOnSvg
+                        className="w-5 h-5 mr-2 opacity-80 inline-block"
+                        stroke={$colors.buttonPrimary}
+                />
+                    {:else}
+                    <CamOffSvg
+                            className="w-5 h-5 mr-2 opacity-80 inline-block"
+                            stroke={$colors.buttonPrimary}
+                    />
+                    {/if}
+                {mediaQuery($width, 'md', '', `camera is ${localParticipant.isCameraEnabled ? 'on' : 'off'}`)}
             </button>
             <button
               class="select-none h-12 mt-4 px-6 text-lg text-white bg-gray-600 rounded-lg focus:outline-none active:bg-gray-600"

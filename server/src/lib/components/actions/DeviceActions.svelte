@@ -47,6 +47,8 @@
     showMicrophones = false;
   }
 
+  const truncateLabel = (label: string) => label.length < 20 ? label : label.substring(0,17) + '…';
+
   onMount(queryDevices);
 
 </script>
@@ -58,12 +60,12 @@
           <SecondaryButton
             onClick={() => showMicrophones = true}
           >
-            Current Microphone: {currentMicrophoneLabel}
+            Current Microphone: {truncateLabel(currentMicrophoneLabel || '')}
           </SecondaryButton>
           <SecondaryButton
                   onClick={() => showCameras = true}
           >
-            Current Camera: {currentCameraLabel}
+            Current Camera: {truncateLabel(currentCameraLabel || '')}
           </SecondaryButton>
           <SecondaryButton light onClick={onCancel}>
             Cancel
